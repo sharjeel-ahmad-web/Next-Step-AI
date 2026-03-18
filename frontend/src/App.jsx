@@ -19,6 +19,9 @@ import ProfilePage from './pages/ProfilePage'
 import AdminDashboard from './pages/AdminDashboard'
 import GoogleCallbackPage from './pages/GoogleCallbackPage'
 import CertificateVerifyPage from './pages/CertificateVerifyPage'
+import ContactPage from './pages/ContactPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
 
 function App() {
   return (
@@ -41,6 +44,9 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
           <Route path="/certificates/verify/:id" element={<CertificateVerifyPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
 
           {/* Protected Routes */}
           <Route element={<><Navbar /><ProtectedRoute /></>}>

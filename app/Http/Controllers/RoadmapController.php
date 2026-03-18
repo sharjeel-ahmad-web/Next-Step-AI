@@ -40,15 +40,17 @@ class RoadmapController extends Controller
                 'job_description'=> 'nullable|string',
                 'current_skills' => 'nullable|array',
                 'skill_gaps'     => 'nullable|array',
+                'language'       => 'nullable|string|max:80',
             ]);
 
             $targetRole   = $validated['target_role'];
             $skillGaps    = $validated['skill_gaps']    ?? [];
             $currentSkills= $validated['current_skills']?? [];
             $description  = $validated['job_description'] ?? ($validated['description'] ?? "I want to become a $targetRole");
+            $language     = $validated['language'] ?? 'English';
 
             // Use Gemini to generate professional, job-ready roadmap nodes
-            $nodes = $this->geminiService->generateRoadmap($targetRole, $skillGaps, $description);
+            $nodes = $this->geminiService->generateRoadmap($targetRole, $skillGaps, $description, $language);
 
             if (empty($nodes)) {
                 throw new \Exception("AI failed to generate professional roadmap nodes.");
@@ -75,6 +77,7 @@ class RoadmapController extends Controller
                 'description'    => $description,
                 'current_skills' => $currentSkills,
                 'skill_gaps'     => $skillGaps,
+                'language'       => $language,
                 'nodes'          => array_values($formattedNodes),
                 'status'         => 'active',
             ]);
@@ -139,11 +142,12 @@ class RoadmapController extends Controller
             return response()->json(['message' => 'Roadmap not found'], 404);
         }
 
-        $skill  = $request->query('skill', $roadmap->target_role);
+        $skill    = $request->query('skill', $roadmap->target_role);
+        $language = $request->query('language', $roadmap->language ?? 'English');
         
-        // Fetch dynamic videos via Gemini
-        $videos = $this->geminiService->getYouTubeResources($skill);
+        // Fetch dynamic videos via Gemini in the user's preferred preparation language.
+        $videos = $this->geminiService->getYouTubeResources($skill, $language);
 
-        return response()->json(['videos' => $videos]);
+        return response()->json(['videos' => $videos, 'language' => $language]);
     }
 }

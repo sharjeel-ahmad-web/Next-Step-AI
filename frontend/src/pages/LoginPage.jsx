@@ -7,8 +7,12 @@ import { authAPI } from '../services/api'
 import { AuthShell } from '../components/AppShell'
 import ThemeToggle from '../components/ThemeToggle'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { useLearningLanguage } from '../components/LanguageProvider'
 
 const LoginPage = () => {
+  const { language } = useLearningLanguage()
+
   useDocumentMeta({
     title: 'Sign In | NextStep AI',
     description: 'Sign in to continue your roadmap-driven education journey on NextStep AI.',
@@ -43,9 +47,9 @@ const LoginPage = () => {
   return (
     <AuthShell
       title="Welcome back"
-      description="Sign in to continue your learning journey with the new responsive interface."
-      asideTitle="Structured education, calmer interface."
-      asideText="Your account keeps roadmaps, progress, certificates, and achievement data in one place. This sign-in flow now matches the same palette and readability system as the landing page."
+      description="Sign in to continue your learning journey, skill analysis history, roadmap progress, and certificates."
+      asideTitle="Keep your learning path in one workspace."
+      asideText={`Your selected preparation language is currently ${language.label}. The app uses that preference to keep roadmap study and video suggestions aligned with how you want to learn.`}
       footer={
         <p className="text-center text-sm text-[var(--text-secondary)]">
           Do not have an account?{' '}
@@ -55,7 +59,8 @@ const LoginPage = () => {
         </p>
       }
     >
-      <div className="mb-5 flex justify-end">
+      <div className="mb-5 flex flex-wrap justify-end gap-3">
+        <LanguageSwitcher />
         <ThemeToggle />
       </div>
 
@@ -94,6 +99,10 @@ const LoginPage = () => {
           <LogIn size={18} />
           <span>{loading ? 'Signing in...' : 'Sign In'}</span>
         </button>
+
+        <div className="rounded-[1.2rem] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--text-secondary)]">
+          Continue from where you left off: missing skills, active roadmap, watched lessons, quizzes, and generated certificates stay connected to your account.
+        </div>
       </form>
 
       <div className="my-6 flex items-center gap-3">

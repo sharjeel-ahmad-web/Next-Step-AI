@@ -6,8 +6,12 @@ import toast from 'react-hot-toast'
 import { skillGapAPI, roadmapAPI } from '../services/api'
 import { LoadingScreen, PageContainer, PageIntro, SectionCard } from '../components/AppShell'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { useLearningLanguage } from '../components/LanguageProvider'
 
 const AnalyzePage = () => {
+  const { language } = useLearningLanguage()
+
   useDocumentMeta({
     title: 'Analyze Skills | NextStep AI',
     description: 'Upload a resume and generate targeted education recommendations and roadmap inputs.',
@@ -46,6 +50,7 @@ const AnalyzePage = () => {
       formData.append('resume', resume)
       formData.append('target_role', targetRole)
       formData.append('job_description', jobDescription)
+      formData.append('language', language.queryLabel)
 
       const { data } = await skillGapAPI.analyze(formData)
       setAnalysis(data)
@@ -68,6 +73,7 @@ const AnalyzePage = () => {
         job_description: jobDescription,
         skill_gaps: analysis.skill_gaps,
         current_skills: analysis.current_skills,
+        language: language.queryLabel,
       })
 
       toast.success('Roadmap generated!')
@@ -88,7 +94,8 @@ const AnalyzePage = () => {
       <PageIntro
         eyebrow="Skill gap analysis"
         title="Turn a resume into a concrete learning plan"
-        description="Upload a PDF resume, define your target role, and let the system identify current strengths, missing skills, and roadmap-ready recommendations."
+        description={`Upload a resume, define your target role, and generate a roadmap for ${language.label}-based preparation with matching learning videos.`}
+        actions={<LanguageSwitcher />}
       />
 
       {!analysis ? (
@@ -110,6 +117,21 @@ const AnalyzePage = () => {
                 </>
               )}
             </label>
+          </SectionCard>
+
+          <SectionCard>
+            <label className="mb-4 block text-lg font-bold">Preparation language</label>
+            <div className="rounded-[1.5rem] bg-[var(--surface)] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold">Current preference: {language.label}</p>
+                  <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
+                    Roadmap guidance and video discovery will use this learning language.
+                  </p>
+                </div>
+                <LanguageSwitcher />
+              </div>
+            </div>
           </SectionCard>
 
           <SectionCard>
@@ -181,6 +203,13 @@ const AnalyzePage = () => {
                 </div>
               </div>
             ) : null}
+
+            <div className="mt-6 rounded-[1.5rem] bg-[var(--surface)] p-5">
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Preparation language</p>
+              <p className="mt-2 text-base leading-7 text-[var(--text-secondary)]">
+                Videos and roadmap study for this role will be fetched in {language.label} whenever available.
+              </p>
+            </div>
           </SectionCard>
 
           <div className="grid gap-3 sm:grid-cols-2">

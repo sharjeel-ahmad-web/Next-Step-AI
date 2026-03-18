@@ -7,6 +7,8 @@ import { roadmapAPI, progressAPI } from '../services/api'
 import QuizModal from '../components/QuizModal'
 import { LoadingScreen, PageContainer, PageIntro, SectionCard } from '../components/AppShell'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { useLearningLanguage } from '../components/LanguageProvider'
 
 const normalizeProgress = (progressData) => {
   if (Array.isArray(progressData)) return progressData
@@ -18,6 +20,7 @@ const normalizeProgress = (progressData) => {
 
 const RoadmapDetailPage = () => {
   const { id } = useParams()
+  const { language } = useLearningLanguage()
   const [roadmap, setRoadmap] = useState(null)
   const [progress, setProgress] = useState([])
   const [passedQuizzes, setPassedQuizzes] = useState([])
@@ -69,7 +72,7 @@ const RoadmapDetailPage = () => {
 
     try {
       const skillName = node.skill_name || node.skill || node.title
-      const { data } = await roadmapAPI.getVideos(id, skillName)
+      const { data } = await roadmapAPI.getVideos(id, skillName, language.queryLabel)
       const resolvedVideos = data.videos || []
       setVideos(resolvedVideos)
       if (resolvedVideos.length > 0) {
@@ -120,7 +123,8 @@ const RoadmapDetailPage = () => {
       <PageIntro
         eyebrow="Roadmap detail"
         title={roadmap.target_role}
-        description="Move through your skills in sequence, watch curated lessons, and unlock the next step by passing each quiz."
+        description={`Move through your skills in sequence, watch ${language.label} learning resources, and unlock the next step by passing each quiz.`}
+        actions={<LanguageSwitcher />}
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -196,6 +200,7 @@ const RoadmapDetailPage = () => {
               <div>
                 <h2 className="text-xl font-bold">Learning resources</h2>
                 <p className="text-sm text-[var(--text-secondary)]">Curated video lessons and quiz checks.</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">{language.label} mode</p>
               </div>
             </div>
 

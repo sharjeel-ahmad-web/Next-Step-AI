@@ -6,8 +6,12 @@ import useAuthStore from '../store/authStore'
 import { AuthShell } from '../components/AppShell'
 import ThemeToggle from '../components/ThemeToggle'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { useLearningLanguage } from '../components/LanguageProvider'
 
 const RegisterPage = () => {
+  const { language } = useLearningLanguage()
+
   useDocumentMeta({
     title: 'Create Account | NextStep AI',
     description: 'Create your NextStep AI account and start a roadmap-first learning experience.',
@@ -63,9 +67,9 @@ const RegisterPage = () => {
   return (
     <AuthShell
       title="Create your account"
-      description="Set up a learner profile that works across roadmaps, progress tracking, and certificate generation."
+      description="Set up a learner profile for skill-gap analysis, roadmap tracking, language-based preparation, and certificate generation."
       asideTitle="One account for the full learning flow."
-      asideText="Registration now follows the same clean visual system, stronger spacing, and theme-aware palette so the app feels consistent from first visit to daily use."
+      asideText={`Your current preparation language is ${language.label}. You can change it any time, and the platform will use it while fetching relevant learning videos.`}
       footer={
         <p className="text-center text-sm text-[var(--text-secondary)]">
           Already have an account?{' '}
@@ -75,7 +79,8 @@ const RegisterPage = () => {
         </p>
       }
     >
-      <div className="mb-5 flex justify-end">
+      <div className="mb-5 flex flex-wrap justify-end gap-3">
+        <LanguageSwitcher />
         <ThemeToggle />
       </div>
 
@@ -117,6 +122,10 @@ const RegisterPage = () => {
           <UserPlus size={18} />
           <span>{loading ? 'Creating account...' : 'Create Account'}</span>
         </button>
+
+        <div className="rounded-[1.2rem] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--text-secondary)]">
+          Create your profile once and keep your target roles, roadmap activity, learning milestones, and certificate history in one place.
+        </div>
       </form>
     </AuthShell>
   )

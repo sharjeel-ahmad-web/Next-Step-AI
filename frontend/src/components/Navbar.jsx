@@ -4,6 +4,7 @@ import { LogOut, User, Trophy, Map, BarChart3, Award, Home, Menu, X } from 'luci
 import { motion } from 'framer-motion'
 import useAuthStore from '../store/authStore'
 import ThemeToggle from './ThemeToggle'
+import LanguageSwitcher from './LanguageSwitcher'
 
 const Navbar = () => {
   const { user, logout } = useAuthStore()
@@ -76,6 +77,7 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center gap-3 rounded-full border border-[var(--border-soft)] bg-[var(--surface-elevated)] px-3 py-2">
+              <LanguageSwitcher compact />
               <ThemeToggle compact />
               <div className="rounded-full bg-[var(--brand-green)]/15 px-3 py-2 text-sm font-bold text-[var(--text-primary)]">
                 {user?.xp || 0} XP
@@ -99,6 +101,7 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-2 lg:hidden">
+            <LanguageSwitcher compact />
             <ThemeToggle compact />
             <button
               type="button"
@@ -141,6 +144,14 @@ const Navbar = () => {
                   </span>
                 </Link>
               ))}
+
+              <Link
+                to="/contact"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2 rounded-2xl bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--text-secondary)]"
+              >
+                Support
+              </Link>
 
               <Link
                 to="/profile"

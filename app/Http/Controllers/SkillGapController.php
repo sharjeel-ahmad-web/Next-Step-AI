@@ -30,6 +30,7 @@ class SkillGapController extends Controller
 
             $targetRole  = $request->input('target_role');
             $description = $request->input('job_description') ?: $request->input('description');
+            $language    = $request->input('language', 'English');
             $resumeText  = "";
 
             if (empty($description)) {
@@ -47,7 +48,8 @@ class SkillGapController extends Controller
             $analysis = $this->geminiService->analyzeSkillGap(
                 $resumeText ?: "No resume provided. Analyze based on goal: $description",
                 $targetRole,
-                $description
+                $description,
+                $language
             );
 
             if (empty($analysis)) {
@@ -57,6 +59,7 @@ class SkillGapController extends Controller
             return response()->json([
                 'success'        => true,
                 'target_role'    => $targetRole,
+                'language'       => $language,
                 'current_skills' => $analysis['current_skills']  ?? [],
                 'required_skills'=> $analysis['required_skills'] ?? [],
                 'skill_gaps'     => $analysis['skill_gaps']     ?? [],

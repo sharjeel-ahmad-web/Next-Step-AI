@@ -20,7 +20,7 @@ class GeminiService
     /**
      * Analyze resume text against target role and description to find skill gaps
      */
-    public function analyzeSkillGap(string $resumeText, string $targetRole, string $description): array
+    public function analyzeSkillGap(string $resumeText, string $targetRole, string $description, string $language = 'English'): array
     {
         try {
             $prompt = "You are an expert career advisor and technical recruiter. 
@@ -28,6 +28,7 @@ class GeminiService
             
             Target Role: {$targetRole}
             User's Goal/Description: {$description}
+            Preferred Learning Language: {$language}
             
             Resume Text:
             {$resumeText}
@@ -51,14 +52,16 @@ class GeminiService
     /**
      * Generate a professional, job-ready roadmap based on gaps
      */
-    public function generateRoadmap(string $targetRole, array $skillGaps, string $description): array
+    public function generateRoadmap(string $targetRole, array $skillGaps, string $description, string $language = 'English'): array
     {
         try {
             $prompt = "Create a professional, job-ready learning roadmap for the role of '{$targetRole}'.
             User Goal: {$description}
+            Preferred Learning Language: {$language}
             The user needs to focus on these specific gaps: " . implode(', ', $skillGaps) . "
             
             The roadmap should be highly structured and cover everything needed to be JOB-READY.
+            Write node titles and descriptions in {$language} when possible, while keeping skill_name in widely searchable technical terms.
             
             Return a JSON array of 'nodes'. Each node must have:
             - title: Clear learning objective
@@ -118,10 +121,11 @@ class GeminiService
     /**
      * Get YouTube resources for a specific skill via Gemini
      */
-    public function getYouTubeResources(string $skill): array
+    public function getYouTubeResources(string $skill, string $language = 'English'): array
     {
         try {
-            $prompt = "Provide a JSON array of 5 popular and high-quality YouTube video tutorials for learning '{$skill}'. 
+            $prompt = "Provide a JSON array of 5 popular and high-quality YouTube video tutorials for learning '{$skill}' in {$language}. 
+            Prioritize videos that teach in {$language} or clearly support {$language}-speaking learners.
             Each object should have:
             - title: The video title
             - video_id: The YouTube 11-character video ID
@@ -134,7 +138,7 @@ class GeminiService
             $videos = json_decode($text, true);
 
             if (!is_array($videos)) {
-                return $this->getFallbackVideos($skill);
+                return $this->getFallbackVideos($skill, $language);
             }
 
             return array_map(function ($video, $index) {
@@ -150,7 +154,7 @@ class GeminiService
 
         } catch (\Exception $e) {
             Log::error('Gemini Video Service error: ' . $e->getMessage());
-            return $this->getFallbackVideos($skill);
+            return $this->getFallbackVideos($skill, $language);
         }
     }
 
@@ -188,13 +192,13 @@ class GeminiService
         }
     }
 
-    protected function getFallbackVideos(string $skill): array
+    protected function getFallbackVideos(string $skill, string $language = 'English'): array
     {
         return [
             [
                 'id'        => '1',
                 'video_id'  => 'Y6shV7S6WpU',
-                'title'     => "$skill Full Course for Beginners",
+                'title'     => "$skill Full Course for Beginners ($language)",
                 'url'       => "https://www.youtube.com/watch?v=Y6shV7S6WpU",
                 'thumbnail' => "https://img.youtube.com/vi/Y6shV7S6WpU/hqdefault.jpg",
                 'duration'  => 'varies',
@@ -202,7 +206,7 @@ class GeminiService
             [
                 'id'        => '2',
                 'video_id'  => 'fBNz5xF-Kx4',
-                'title'     => "$skill Advanced Tutorial",
+                'title'     => "$skill Advanced Tutorial ($language)",
                 'url'       => "https://www.youtube.com/watch?v=fBNz5xF-Kx4",
                 'thumbnail' => "https://img.youtube.com/vi/fBNz5xF-Kx4/hqdefault.jpg",
                 'duration'  => 'varies',

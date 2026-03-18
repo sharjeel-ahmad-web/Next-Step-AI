@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 
 export const pageTransition = {
   initial: { opacity: 0, y: 18 },
@@ -88,9 +89,9 @@ export const AuthShell = ({ title, description, children, asideTitle, asideText,
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            ['AI planning', 'Role-focused learning flows'],
-            ['Responsive UI', 'Built for phone to desktop'],
-            ['Theme aware', 'Day and night mode ready'],
+            ['AI planning', 'Roadmaps based on missing skills and job goals'],
+            ['Multi-language', 'Choose a preparation language and fetch matching videos'],
+            ['Certificates', 'Track progress and unlock shareable completion proof'],
           ].map(([heading, text]) => (
             <div key={heading} className="rounded-[1.4rem] border border-[var(--border-soft)] bg-[var(--surface)] p-4">
               <p className="text-sm font-bold">{heading}</p>
@@ -107,6 +108,11 @@ export const AuthShell = ({ title, description, children, asideTitle, asideText,
         </div>
         {children}
         {footer ? <div className="mt-8 border-t border-[var(--border-soft)] pt-6">{footer}</div> : null}
+        <div className="mt-6 flex flex-wrap gap-4 border-t border-[var(--border-soft)] pt-5 text-sm font-semibold text-[var(--text-secondary)]">
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/contact">Contact</Link>
+        </div>
       </motion.div>
     </div>
   </div>

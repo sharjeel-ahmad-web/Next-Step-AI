@@ -14,8 +14,10 @@ class Roadmap extends Model
     protected $fillable = [
         'user_id',
         'target_role',
+        'description',
         'current_skills',
         'skill_gaps',
+        'language',
         'nodes',
         'status',
     ];

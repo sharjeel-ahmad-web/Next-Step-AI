@@ -74,7 +74,7 @@ export const roadmapAPI = {
   generate: (data) => api.post('/roadmaps/generate', data),
   getOne: (id) => api.get(`/roadmaps/${id}`),
   delete: (id) => api.delete(`/roadmaps/${id}`),
-  getVideos: (id, skillName) => api.get(`/roadmaps/${id}/videos`, { params: { skill: skillName } }),
+  getVideos: (id, skillName, language) => api.get(`/roadmaps/${id}/videos`, { params: { skill: skillName, language } }),
 }
 
 // ============ PROGRESS APIs ============

@@ -1,29 +1,37 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Award, CalendarDays, Map, MoonStar, Sparkles, Target, TrendingUp, Users } from 'lucide-react'
+import { ArrowRight, Award, CalendarDays, CheckCircle2, Globe2, Map, MoonStar, Sparkles, Target, TrendingUp, Users } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 const LandingPage = () => {
   useDocumentMeta({
-    title: 'NextStep AI | Smarter Education Paths With AI',
+    title: 'NextStep AI | AI Roadmaps, Skill Gap Analysis, Certificates',
     description:
-      'Build a modern learning journey with AI skill analysis, personalized roadmaps, progress visibility, and certificate-ready outcomes.',
+      'Help confused students understand what to learn, which skills are missing, how to become job ready, and how to study in their preferred language with matching videos.',
   })
 
   const features = [
-    { icon: Target, title: 'Skill Gap Analysis', desc: 'Turn resumes and goals into clear next-step learning priorities.' },
-    { icon: Map, title: 'Guided Roadmaps', desc: 'Structure every milestone into an education path that stays practical.' },
-    { icon: TrendingUp, title: 'Progress Visibility', desc: 'Track streaks, XP, and milestone completion with less friction.' },
-    { icon: Award, title: 'Verified Certificates', desc: 'Issue certificate-ready achievements learners can actually share.' },
-    { icon: Users, title: 'Healthy Competition', desc: 'Use leaderboards to motivate classrooms, cohorts, or public learners.' },
-    { icon: Sparkles, title: 'Adaptive Experience', desc: 'Blend AI suggestions with readable workflows and human teaching goals.' },
+    { icon: Target, title: 'Skill Gap Analysis', desc: 'Students upload their background, define a target role, and instantly see missing skills.' },
+    { icon: Map, title: 'Guided Roadmaps', desc: 'Every roadmap breaks confusion into a sequence of practical lessons, skills, and milestones.' },
+    { icon: Globe2, title: 'Language-Based Preparation', desc: 'Learners can prepare in a preferred language and fetch matching learning videos for that language.' },
+    { icon: TrendingUp, title: 'Progress Visibility', desc: 'Track streaks, XP, completed skills, and what to study next without losing focus.' },
+    { icon: Award, title: 'Verified Certificates', desc: 'Generate certificate-ready proof when roadmap milestones are completed successfully.' },
+    { icon: Users, title: 'Engagement Loop', desc: 'Leaderboards, milestones, and clear next actions keep learners interested for longer.' },
   ]
 
   const highlights = [
-    'Built for schools, institutes, and self-paced learning platforms',
-    'Readable dashboards for learners, mentors, and administrators',
-    'Responsive interface tuned for phone, tablet, laptop, and desktop',
+    'Built for confused students who do not know what to learn first',
+    'Useful for academies, institutes, bootcamps, and self-learners',
+    'Responsive layout tuned for mobile, laptop, widescreen, and classroom displays',
+  ]
+
+  const trustPoints = [
+    'Clear roadmap after every analysis',
+    'Preparation language saved across the app',
+    'Videos fetched according to selected learning language',
+    'Progress-based certificate generation',
   ]
 
   const today = new Intl.DateTimeFormat('en-US', {
@@ -53,6 +61,7 @@ const LandingPage = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <LanguageSwitcher />
               <ThemeToggle />
               <Link to="/login" className="btn-secondary">
                 Sign In
@@ -77,29 +86,30 @@ const LandingPage = () => {
 
             <div className="space-y-4">
               <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.95] sm:text-6xl lg:text-7xl">
-                A sharper education interface for <span className="text-[var(--brand-orange)]">modern learners</span>.
+                Students stop guessing. <span className="text-[var(--brand-orange)]">NextStep AI</span> shows what to learn, what is missing, and how to get job ready.
               </h1>
               <p className="max-w-2xl text-base leading-8 text-[var(--text-secondary)] sm:text-lg">
-                NextStep AI combines skill analysis, roadmap planning, measurable progress, and certificate-ready
-                learning into one responsive education platform.
+                This platform is built for learners who feel confused after joining a course, finishing videos, or
+                trying to apply for jobs without a proper roadmap. Analyze your skills, generate a clear path,
+                prepare in your chosen language, and stay engaged until certificate stage.
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/register" className="btn-primary text-base sm:text-lg">
-                Start Learning
+                <Link to="/register" className="btn-primary text-base sm:text-lg">
+                Start Your Roadmap
                 <ArrowRight size={18} />
               </Link>
               <Link to="/login" className="btn-secondary text-base sm:text-lg">
-                Explore Dashboard
+                Open Learner Workspace
               </Link>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
               {highlights.map((item) => (
                 <div key={item} className="rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-4">
-                  <p className="text-sm font-semibold leading-6 text-[var(--text-secondary)]">{item}</p>
-                </div>
+                    <p className="text-sm font-semibold leading-6 text-[var(--text-secondary)]">{item}</p>
+                  </div>
               ))}
             </div>
           </motion.div>
@@ -115,11 +125,11 @@ const LandingPage = () => {
               <div className="relative space-y-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">Palette direction</p>
-                    <h2 className="mt-2 text-2xl font-bold">Soft focus, clear hierarchy</h2>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">Student journey</p>
+                    <h2 className="mt-2 text-2xl font-bold">From confusion to confidence</h2>
                   </div>
                   <div className="rounded-full bg-[var(--brand-green)]/16 px-4 py-2 text-sm font-bold text-[var(--text-primary)]">
-                    Responsive UI
+                    AdSense-ready content
                   </div>
                 </div>
 
@@ -143,19 +153,19 @@ const LandingPage = () => {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-[1.5rem] bg-[var(--surface-strong)] p-4">
                     <p className="text-sm font-semibold text-[var(--text-muted)]">Learner flow</p>
-                    <p className="mt-2 text-3xl font-extrabold">Resume to Roadmap to Certificate</p>
+                    <p className="mt-2 text-3xl font-extrabold">Analyze to roadmap to job preparation</p>
                   </div>
                   <div className="rounded-[1.5rem] bg-[var(--brand-sky)] p-4 text-[var(--brand-charcoal)]">
-                    <p className="text-sm font-semibold opacity-75">Today focus</p>
-                    <p className="mt-2 text-3xl font-extrabold">74% weekly completion</p>
+                    <p className="text-sm font-semibold opacity-75">Language support</p>
+                    <p className="mt-2 text-3xl font-extrabold">Study in your preferred language</p>
                   </div>
                 </div>
 
                 <div className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface)] p-4">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-[var(--text-muted)]">Education dashboard</p>
-                      <p className="mt-1 text-xl font-bold">Readable, calm, and SEO-ready</p>
+                      <p className="text-sm font-semibold text-[var(--text-muted)]">Why students stay engaged</p>
+                      <p className="mt-1 text-xl font-bold">The interface keeps the next step visible</p>
                     </div>
                     <span className="rounded-full bg-[var(--brand-cream)] px-3 py-2 text-sm font-bold text-[var(--brand-charcoal)]">
                       2026 UX
@@ -164,9 +174,9 @@ const LandingPage = () => {
 
                   <div className="space-y-3">
                     {[
-                      ['Curriculum completion', '88%'],
-                      ['Student engagement', 'High'],
-                      ['Certificate issuance', 'Automated'],
+                      ['Missing skills', 'Visible after analysis'],
+                      ['Learning language', 'Saved across sessions'],
+                      ['Certificate issuance', 'Generated from progress'],
                     ].map(([label, value]) => (
                       <div key={label} className="flex items-center justify-between rounded-2xl bg-[var(--surface-elevated)] px-4 py-3">
                         <span className="text-sm font-semibold text-[var(--text-secondary)]">{label}</span>
@@ -191,10 +201,10 @@ const LandingPage = () => {
           >
             <div className="space-y-3">
               <span className="eyebrow">Core capabilities</span>
-              <h2 className="max-w-2xl text-3xl font-extrabold sm:text-4xl">Everything learners need, without visual noise.</h2>
+              <h2 className="max-w-3xl text-3xl font-extrabold sm:text-4xl">Everything a confused learner needs to move from course enrollment to job preparation.</h2>
             </div>
             <p className="max-w-xl text-base leading-7 text-[var(--text-secondary)]">
-              The interface is designed for educational clarity first: faster scanning, stronger hierarchy, and a calm color system for long sessions.
+              The product message is simple: understand your goal, identify the missing skills, follow a roadmap, learn in a chosen language, and prove progress with certificates.
             </p>
           </motion.div>
 
@@ -220,6 +230,29 @@ const LandingPage = () => {
       </section>
 
       <section className="px-3 py-10 sm:px-5 lg:px-6">
+        <div className="page-shell grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+          <SectionBlock
+            eyebrow="Why this app matters"
+            title="Most students are not lazy. They are directionless."
+            description="They finish random tutorials, collect incomplete knowledge, and still do not know whether they are job ready. NextStep AI solves that by turning learning into an understandable path."
+          />
+
+          <div className="glass-card rounded-[2rem]">
+            <div className="grid gap-3 md:grid-cols-2">
+              {trustPoints.map((item) => (
+                <div key={item} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 text-[var(--brand-green)]" size={18} />
+                    <p className="text-sm font-semibold leading-6 text-[var(--text-secondary)]">{item}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-3 py-10 sm:px-5 lg:px-6">
         <div className="page-shell">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
@@ -230,9 +263,9 @@ const LandingPage = () => {
             <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div className="space-y-4">
                 <span className="eyebrow">Launch your learning ecosystem</span>
-                <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to turn this design system into the full website?</h2>
+                <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to give learners a roadmap they can actually follow?</h2>
                 <p className="max-w-2xl text-base leading-8 text-[var(--text-secondary)]">
-                  This first implementation sets the palette, responsive structure, day and night mode, and SEO baseline. The next step is applying the same system to the remaining pages.
+                  NextStep AI is designed to remove confusion, improve engagement, and present enough meaningful content and trust pages for a stronger production launch.
                 </p>
               </div>
 
@@ -243,13 +276,35 @@ const LandingPage = () => {
                 <Link to="/login" className="btn-secondary">
                   Open Platform
                 </Link>
+                <Link to="/contact" className="btn-secondary">
+                  Contact Team
+                </Link>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
+
+      <footer className="px-3 pb-8 pt-2 sm:px-5 lg:px-6">
+        <div className="page-shell flex flex-col gap-3 rounded-[1.6rem] border border-[var(--border-soft)] bg-[var(--surface)] px-5 py-5 text-sm font-semibold text-[var(--text-secondary)] sm:flex-row sm:items-center sm:justify-between">
+          <p>Roadmap-based learning platform for students, institutes, and job-focused self-learners.</p>
+          <div className="flex flex-wrap gap-4">
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
+            <Link to="/contact">Contact</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
+
+const SectionBlock = ({ eyebrow, title, description }) => (
+  <div className="space-y-4">
+    <span className="eyebrow">{eyebrow}</span>
+    <h2 className="text-3xl font-extrabold sm:text-4xl">{title}</h2>
+    <p className="max-w-2xl text-base leading-8 text-[var(--text-secondary)]">{description}</p>
+  </div>
+)
 
 export default LandingPage

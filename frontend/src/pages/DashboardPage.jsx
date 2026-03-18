@@ -7,8 +7,12 @@ import useAuthStore from '../store/authStore'
 import { gamificationAPI, roadmapAPI } from '../services/api'
 import { EmptyState, LoadingScreen, PageContainer, PageIntro, SectionCard, StatCard } from '../components/AppShell'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
+import LanguageSwitcher from '../components/LanguageSwitcher'
+import { useLearningLanguage } from '../components/LanguageProvider'
 
 const DashboardPage = () => {
+  const { language } = useLearningLanguage()
+
   useDocumentMeta({
     title: 'Dashboard | NextStep AI',
     description: 'Review your education progress, active roadmaps, XP, and quick actions in one dashboard.',
@@ -55,7 +59,8 @@ const DashboardPage = () => {
       <PageIntro
         eyebrow="Learner dashboard"
         title={`Welcome back, ${user?.name || 'Learner'}`}
-        description="Review your roadmap activity, current streak, and the fastest next actions without switching screens."
+        description={`Review your roadmap activity, current streak, and the fastest next actions. Your preparation language is set to ${language.label}.`}
+        actions={<LanguageSwitcher />}
       />
 
       <div className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -102,8 +107,8 @@ const DashboardPage = () => {
           <h2 className="mt-2 text-2xl font-bold">Stay consistent</h2>
           <div className="mt-5 space-y-3">
             {[
-              ['Theme ready', 'Day and night mode available across the platform'],
-              ['Responsive layout', 'Optimized for mobile, tablet, and desktop study'],
+              ['Language mode', `${language.label} is currently selected for preparation and video discovery`],
+              ['Responsive layout', 'Optimized for mobile, tablet, desktop, and wide classroom screens'],
               ['Certificate path', 'Finish a roadmap to unlock shareable proof'],
             ].map(([title, copy]) => (
               <div key={title} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
