@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { CheckCircle, Circle, Play, HelpCircle, Lock, RefreshCw, Briefcase, ClipboardCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { roadmapAPI, progressAPI } from '../services/api'
+import practiceTaskService from '../services/practiceTaskService'
 import QuizModal from '../components/QuizModal'
 import { LoadingScreen, PageContainer, PageIntro, SectionCard } from '../components/AppShell'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
@@ -30,6 +31,7 @@ const RoadmapDetailPage = () => {
   const [selectedVideo, setSelectedVideo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showQuizModal, setShowQuizModal] = useState(false)
+  const [taskForms, setTaskForms] = useState({})
 
   useDocumentMeta({
     title: roadmap ? `${roadmap.target_role} | NextStep AI` : 'Roadmap Detail | NextStep AI',
@@ -124,14 +126,45 @@ const RoadmapDetailPage = () => {
     }
 
     try {
-      const { data } = await progressAPI.updatePracticeTask(currentProgressId, {
+      const form = taskForms[taskId] || {}
+      const { data } = await practiceTaskService.updateTask(currentProgressId, {
         task_id: taskId,
         completed,
+        portfolio_url: form.portfolio_url || '',
+        submission_notes: form.submission_notes || '',
       })
       setPracticeTasks(data.practice_tasks || [])
       toast.success(completed ? 'Assignment marked complete' : 'Assignment reopened')
     } catch (error) {
       toast.error('Failed to update assignment')
+    }
+  }
+
+  const handleTaskFieldChange = (taskId, field, value) => {
+    setTaskForms((current) => ({
+      ...current,
+      [taskId]: {
+        ...current[taskId],
+        [field]: value,
+      },
+    }))
+  }
+
+  const handleTaskFileUpload = async (taskId, file) => {
+    if (!currentProgressId || !file) {
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('task_id', taskId)
+    formData.append('file', file)
+
+    try {
+      const { data } = await practiceTaskService.uploadSubmission(currentProgressId, formData)
+      setPracticeTasks(data.practice_tasks || [])
+      toast.success('Practice submission uploaded')
+    } catch (error) {
+      toast.error('Failed to upload submission')
     }
   }
 
@@ -272,6 +305,37 @@ const RoadmapDetailPage = () => {
                               <p className="text-sm font-bold">{task.title}</p>
                               <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{task.deliverable}</p>
                               <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{task.revision_step}</p>
+                              <div className="mt-3 grid gap-3">
+                                <input
+                                  className="input-field"
+                                  placeholder="Portfolio / GitHub / live demo link"
+                                  value={taskForms[task.task_id]?.portfolio_url ?? task.portfolio_url ?? ''}
+                                  onChange={(event) => handleTaskFieldChange(task.task_id, 'portfolio_url', event.target.value)}
+                                />
+                                <textarea
+                                  className="input-field min-h-[90px] resize-none"
+                                  placeholder="Submission notes: what you built, what you learned, what still needs work"
+                                  value={taskForms[task.task_id]?.submission_notes ?? task.submission_notes ?? ''}
+                                  onChange={(event) => handleTaskFieldChange(task.task_id, 'submission_notes', event.target.value)}
+                                />
+                                <label className="btn-secondary cursor-pointer">
+                                  Upload Submission File
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    onChange={(event) => handleTaskFileUpload(task.task_id, event.target.files?.[0])}
+                                  />
+                                </label>
+                                <div className="rounded-[1rem] bg-[var(--surface)] px-3 py-3 text-sm text-[var(--text-secondary)]">
+                                  Mentor review status: <span className="font-bold text-[var(--text-primary)]">{task.mentor_review_status || 'not_submitted'}</span>
+                                  {task.submission_file_url ? (
+                                    <span className="block mt-2 break-all">File: {task.submission_file_url}</span>
+                                  ) : null}
+                                  {task.mentor_feedback ? (
+                                    <span className="block mt-2">Feedback: {task.mentor_feedback}</span>
+                                  ) : null}
+                                </div>
+                              </div>
                             </div>
                             <button
                               type="button"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Award, Map, Activity, Trash2, UserCog, Search, LayoutDashboard, ShieldCheck, Settings, Database, RefreshCw, TrendingUp } from 'lucide-react'
+import { Users, Award, Map, Activity, Trash2, UserCog, Search, LayoutDashboard, ShieldCheck, Settings, Database, RefreshCw, TrendingUp, ClipboardCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { adminAPI } from '../services/api'
 import { EmptyState, LoadingScreen, PageContainer, PageIntro, SectionCard, StatCard } from '../components/AppShell'
@@ -19,10 +19,12 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filtering, setFiltering] = useState(false)
+  const [reviews, setReviews] = useState([])
 
   useEffect(() => {
     fetchAdminData()
     fetchUsers()
+    fetchReviews()
   }, [])
 
   const fetchAdminData = async () => {
@@ -45,6 +47,15 @@ const AdminDashboard = () => {
       toast.error('Failed to load users')
     } finally {
       setFiltering(false)
+    }
+  }
+
+  const fetchReviews = async () => {
+    try {
+      const response = await adminAPI.getPracticeReviews()
+      setReviews(response.data.reviews || [])
+    } catch (error) {
+      toast.error('Failed to load review queue')
     }
   }
 
@@ -73,6 +84,20 @@ const AdminDashboard = () => {
     }
   }
 
+  const handleReview = async (progressId, taskId, status) => {
+    try {
+      await adminAPI.reviewPracticeTask(progressId, {
+        task_id: taskId,
+        status,
+        mentor_feedback: status === 'approved' ? 'Good practical proof. Keep building on this.' : 'Needs revision. Improve clarity, polish, and practical explanation.',
+      })
+      toast.success('Practice task reviewed')
+      fetchReviews()
+    } catch (error) {
+      toast.error('Failed to review task')
+    }
+  }
+
   if (loading) {
     return <LoadingScreen label="Loading admin dashboard..." />
   }
@@ -81,6 +106,7 @@ const AdminDashboard = () => {
     { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
     { id: 'users', icon: Users, label: 'User Management' },
     { id: 'content', icon: Database, label: 'System Content' },
+    { id: 'reviews', icon: ClipboardCheck, label: 'Practice Reviews' },
     { id: 'settings', icon: Settings, label: 'Global Settings' },
   ]
 
@@ -230,6 +256,45 @@ const AdminDashboard = () => {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+              </SectionCard>
+            </motion.div>
+          ) : null}
+
+          {activeTab === 'reviews' ? (
+            <motion.div key="reviews" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
+              <SectionCard>
+                <div className="mb-5">
+                  <h2 className="text-2xl font-bold">Practice review queue</h2>
+                  <p className="mt-2 text-sm text-[var(--text-secondary)]">Approve or send back submitted mini projects and portfolio work.</p>
+                </div>
+
+                {reviews.length === 0 ? (
+                  <EmptyState icon={ClipboardCheck} title="No reviews pending" description="Submitted assignment reviews will appear here." />
+                ) : (
+                  <div className="grid gap-4">
+                    {reviews.map((item) => (
+                      <div key={`${item.progress_id}-${item.task_id}`} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <p className="text-sm font-bold">{item.title}</p>
+                            <p className="mt-1 text-sm text-[var(--brand-blue)]">{item.user_name} - {item.target_role}</p>
+                            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.submission_notes || 'No notes submitted.'}</p>
+                            {item.portfolio_url ? <p className="mt-2 text-xs break-all text-[var(--text-secondary)]">Portfolio: {item.portfolio_url}</p> : null}
+                            {item.submission_file_url ? <p className="mt-1 text-xs break-all text-[var(--text-secondary)]">File: {item.submission_file_url}</p> : null}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button type="button" onClick={() => handleReview(item.progress_id, item.task_id, 'approved')} className="btn-primary">
+                              Approve
+                            </button>
+                            <button type="button" onClick={() => handleReview(item.progress_id, item.task_id, 'needs_revision')} className="btn-secondary">
+                              Needs Revision
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </SectionCard>

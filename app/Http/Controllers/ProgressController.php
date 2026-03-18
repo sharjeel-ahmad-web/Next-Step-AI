@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Progress;
 use App\Models\Roadmap;
 use App\Models\UserStats;
+use App\Services\PracticeTaskService;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 
 class ProgressController extends Controller
 {
+    public function __construct(protected PracticeTaskService $practiceTaskService)
+    {
+    }
+
     /**
      * POST /api/progress/start
      */
@@ -38,7 +43,7 @@ class ProgressController extends Controller
                 'completed_nodes' => [],
                 'videos_watched'  => [],
                 'node_activity'   => [],
-                'practice_tasks'  => $this->buildPracticeTasksFromRoadmap(Roadmap::find($roadmapId)),
+                'practice_tasks'  => $this->practiceTaskService->buildTasksFromRoadmap(Roadmap::find($roadmapId)),
                 'status'          => 'in_progress',
                 'started_at'      => now(),
             ]);
@@ -183,7 +188,7 @@ class ProgressController extends Controller
         return response()->json([
             'node_progress' => $nodeProgress,
             'passed_quizzes' => $progress->passed_quizzes ?? [],
-            'practice_tasks' => $progress->practice_tasks ?? $this->buildPracticeTasksFromRoadmap($roadmap),
+            'practice_tasks' => $progress->practice_tasks ?: $this->practiceTaskService->syncTasksForRoadmap($progress, $roadmap),
         ]);
     }
 
@@ -194,7 +199,9 @@ class ProgressController extends Controller
     {
         $validated = $request->validate([
             'task_id' => 'required|string',
-            'completed' => 'required|boolean',
+            'completed' => 'nullable|boolean',
+            'portfolio_url' => 'nullable|url|max:2048',
+            'submission_notes' => 'nullable|string|max:3000',
         ]);
 
         $progress = Progress::where('_id', $id)
@@ -205,28 +212,45 @@ class ProgressController extends Controller
             return response()->json(['message' => 'Progress record not found'], 404);
         }
 
-        $tasks = $progress->practice_tasks ?? [];
-        $taskUpdated = false;
+        $tasks = $this->practiceTaskService->updateTask($progress, $validated['task_id'], $validated);
 
-        foreach ($tasks as &$task) {
-            if ((string) ($task['task_id'] ?? '') === $validated['task_id']) {
-                $task['completed'] = (bool) $validated['completed'];
-                $task['completed_at'] = $validated['completed'] ? now()->toIso8601String() : null;
-                $taskUpdated = true;
-                break;
-            }
-        }
-
-        if (!$taskUpdated) {
+        if (empty($tasks)) {
             return response()->json(['message' => 'Practice task not found'], 404);
         }
 
-        $progress->practice_tasks = $tasks;
-        $progress->save();
+        return response()->json([
+            'success' => true,
+            'practice_tasks' => $tasks,
+        ]);
+    }
+
+    /**
+     * POST /api/progress/{id}/practice-submission
+     */
+    public function uploadPracticeSubmission(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'task_id' => 'required|string',
+            'file' => 'required|file|max:10240',
+        ]);
+
+        $progress = Progress::where('_id', $id)
+            ->where('user_id', (string) $request->user()->_id)
+            ->first();
+
+        if (!$progress) {
+            return response()->json(['message' => 'Progress record not found'], 404);
+        }
+
+        $tasks = $this->practiceTaskService->attachSubmissionFile($progress, $validated['task_id'], $request->file('file'));
+
+        if (empty($tasks)) {
+            return response()->json(['message' => 'Practice task not found'], 404);
+        }
 
         return response()->json([
             'success' => true,
-            'practice_tasks' => $progress->practice_tasks,
+            'practice_tasks' => $tasks,
         ]);
     }
 
@@ -288,20 +312,9 @@ class ProgressController extends Controller
 
             $videosWatchedThisWeek += count($progress->videos_watched ?? []);
 
-            foreach (($progress->practice_tasks ?? []) as $task) {
-                if (!($task['completed'] ?? false)) {
-                    $weeklyAssignments[] = [
-                        'task_id' => $task['task_id'] ?? '',
-                        'roadmap_id' => (string) $roadmap->_id,
-                        'target_role' => $roadmap->target_role,
-                        'skill_name' => $task['skill_name'] ?? 'Practice task',
-                        'title' => $task['title'] ?? 'Practice assignment',
-                        'deliverable' => $task['deliverable'] ?? '',
-                        'revision_step' => $task['revision_step'] ?? '',
-                    ];
-                }
-            }
         }
+
+        $weeklyAssignments = $this->practiceTaskService->buildWeeklyAssignments($progressRecords, $roadmaps);
 
         $topWeakPoints = collect($weakPoints)->take(4)->values();
         $topAssignments = collect($weeklyAssignments)->take(4)->values();
@@ -364,29 +377,4 @@ class ProgressController extends Controller
         ];
     }
 
-    protected function buildPracticeTasksFromRoadmap(?Roadmap $roadmap): array
-    {
-        if (!$roadmap) {
-            return [];
-        }
-
-        $tasks = [];
-
-        foreach (($roadmap->nodes ?? []) as $node) {
-            $nodeId = (string) ($node['id'] ?? '');
-            $skillName = $node['skill_name'] ?? ($node['title'] ?? 'Skill');
-            $tasks[] = [
-                'task_id' => "task-{$nodeId}",
-                'node_id' => $nodeId,
-                'skill_name' => $skillName,
-                'title' => "Build one mini project for {$skillName}",
-                'deliverable' => "Create one small practical task or portfolio-ready example using {$skillName}.",
-                'revision_step' => "Revise the concept once and explain the solution in your own words.",
-                'completed' => false,
-                'completed_at' => null,
-            ];
-        }
-
-        return $tasks;
-    }
 }

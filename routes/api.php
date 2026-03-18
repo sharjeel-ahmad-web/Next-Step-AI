@@ -94,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/complete',      [ProgressController::class, 'complete']);
         Route::post('/{id}/track-video',   [ProgressController::class, 'trackVideo']);
         Route::post('/{id}/practice-task', [ProgressController::class, 'updatePracticeTask']);
+        Route::post('/{id}/practice-submission', [ProgressController::class, 'uploadPracticeSubmission']);
         Route::get('/roadmap/{roadmapId}', [ProgressController::class, 'getRoadmapProgress']);
         Route::get('/weekly-insights',     [ProgressController::class, 'getWeeklyInsights']);
     });
@@ -118,6 +119,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
         Route::patch('/users/{id}/role', [AdminController::class, 'updateRole']);
         Route::get('/stats', [AdminController::class, 'getStats']);
+        Route::get('/practice-reviews', [AdminController::class, 'getPracticeReviews']);
+        Route::post('/practice-reviews/{progressId}', [AdminController::class, 'reviewPracticeTask']);
         Route::delete('/certificates/{id}', [AdminController::class, 'deleteCertificate']);
     });
 

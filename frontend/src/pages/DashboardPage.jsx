@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Target, Map, TrendingUp, Award, Zap, Calendar, ArrowRight, FileText } from 'lucide-react'
+import { Target, Map, TrendingUp, Award, Zap, Calendar, ArrowRight, FileText, FolderKanban } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '../store/authStore'
-import { gamificationAPI, roadmapAPI } from '../services/api'
+import { gamificationAPI, roadmapAPI, progressAPI } from '../services/api'
 import { EmptyState, LoadingScreen, PageContainer, PageIntro, SectionCard, StatCard } from '../components/AppShell'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
 import LanguageSwitcher from '../components/LanguageSwitcher'
@@ -22,14 +22,20 @@ const DashboardPage = () => {
   const { user } = useAuthStore()
   const [stats, setStats] = useState(null)
   const [roadmaps, setRoadmaps] = useState([])
+  const [weeklyInsights, setWeeklyInsights] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsResponse, roadmapsResponse] = await Promise.all([gamificationAPI.getStats(), roadmapAPI.getAll()])
+        const [statsResponse, roadmapsResponse, progressResponse] = await Promise.all([
+          gamificationAPI.getStats(),
+          roadmapAPI.getAll(),
+          progressAPI.getWeeklyInsights(),
+        ])
         setStats(statsResponse.data)
         setRoadmaps(roadmapsResponse.data)
+        setWeeklyInsights(progressResponse.data)
       } catch (error) {
         toast.error('Failed to load dashboard data')
       } finally {
@@ -47,8 +53,14 @@ const DashboardPage = () => {
       { icon: Map, title: 'Roadmaps', desc: 'Open your guided learning paths.', link: '/roadmaps', tone: 'lilac' },
       { icon: TrendingUp, title: 'Progress', desc: 'Track completion and current momentum.', link: '/progress', tone: 'green' },
       { icon: Award, title: 'Certificates', desc: 'Review and export earned certificates.', link: '/certificates', tone: 'blue' },
+      { icon: FolderKanban, title: 'Portfolio Showcase', desc: 'Review practical mini projects and portfolio-ready proof of work.', link: '/portfolio-showcase', tone: 'green' },
     ],
     [],
+  )
+
+  const jobReadinessScore = Math.min(
+    100,
+    Math.round(((stats?.xp || 0) / 5) + ((weeklyInsights?.stats?.completed_this_week || 0) * 10) + ((weeklyInsights?.stats?.assignments_count || 0) * 5)),
   )
 
   if (loading) {
@@ -70,6 +82,23 @@ const DashboardPage = () => {
         <StatCard icon={Map} label="Active Roadmaps" value={roadmaps.length} tone="green" detail="Paths currently available to continue." />
         <StatCard icon={Calendar} label="Day Streak" value={stats?.streak || 0} tone="lilac" detail="Consistency tracked day by day." />
       </div>
+
+      <SectionCard className="mb-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Job readiness</p>
+            <h2 className="mt-2 text-3xl font-bold">{jobReadinessScore}/100</h2>
+            <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+              This score combines roadmap progress, weekly completions, and practice-task execution to estimate how close you are to a job-ready level.
+            </p>
+          </div>
+          <div className="w-full max-w-md">
+            <div className="h-4 overflow-hidden rounded-full bg-[var(--surface)]">
+              <div className="h-full rounded-full bg-gradient-to-r from-[var(--brand-orange)] via-[var(--brand-blue)] to-[var(--brand-green)]" style={{ width: `${jobReadinessScore}%` }} />
+            </div>
+          </div>
+        </div>
+      </SectionCard>
 
       <div className="mb-8 grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
         <SectionCard>

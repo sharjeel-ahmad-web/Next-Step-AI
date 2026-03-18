@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, CheckCircle, Clock, Award, AlertTriangle, RotateCcw, ClipboardCheck } from 'lucide-react'
+import { TrendingUp, CheckCircle, Clock, Award, AlertTriangle, RotateCcw, ClipboardCheck, ExternalLink } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { roadmapAPI, progressAPI } from '../services/api'
 import { EmptyState, LoadingScreen, PageContainer, PageIntro, SectionCard } from '../components/AppShell'
@@ -91,6 +91,10 @@ const ProgressPage = () => {
                       </div>
                     ))}
                   </div>
+
+                  <div className="mt-4 rounded-[1.2rem] bg-[var(--brand-green)]/15 p-4 text-sm leading-6 text-[var(--text-primary)]">
+                    Estimated job-readiness score: {Math.min(100, ((weeklyInsights.stats?.completed_this_week || 0) * 10) + ((weeklyInsights.stats?.assignments_count || 0) * 10) + 20)}/100
+                  </div>
                 </div>
 
                 <div>
@@ -143,7 +147,7 @@ const ProgressPage = () => {
                 </div>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
+                  <div className="grid gap-3 md:grid-cols-2">
                 {weeklyInsights.weekly_assignments.map((item) => (
                   <div key={item.task_id} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
                     <p className="text-sm font-bold">{item.title}</p>
@@ -151,6 +155,10 @@ const ProgressPage = () => {
                     <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.deliverable}</p>
                     <div className="mt-3 rounded-[1rem] bg-[var(--surface-elevated)] px-3 py-3 text-sm leading-6 text-[var(--text-secondary)]">
                       {item.revision_step}
+                    </div>
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--surface-elevated)] px-3 py-2 text-xs font-bold text-[var(--text-primary)]">
+                      <ExternalLink size={14} />
+                      {item.mentor_review_status || 'not_submitted'}
                     </div>
                   </div>
                 ))}
