@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, CheckCircle, Clock, Award } from 'lucide-react'
+import { TrendingUp, CheckCircle, Clock, Award, AlertTriangle, RotateCcw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { roadmapAPI, progressAPI } from '../services/api'
 import { EmptyState, LoadingScreen, PageContainer, PageIntro, SectionCard } from '../components/AppShell'
@@ -14,6 +14,7 @@ const ProgressPage = () => {
   })
 
   const [roadmaps, setRoadmaps] = useState([])
+  const [weeklyInsights, setWeeklyInsights] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,6 +24,7 @@ const ProgressPage = () => {
   const fetchProgress = async () => {
     try {
       const { data } = await roadmapAPI.getAll()
+      const weeklyInsightsResponse = await progressAPI.getWeeklyInsights()
       const roadmapsWithProgress = await Promise.all(
         data.map(async (roadmap) => {
           try {
@@ -35,6 +37,7 @@ const ProgressPage = () => {
         }),
       )
       setRoadmaps(roadmapsWithProgress)
+      setWeeklyInsights(weeklyInsightsResponse.data)
     } catch (error) {
       toast.error('Failed to load progress')
     } finally {
@@ -57,13 +60,72 @@ const ProgressPage = () => {
       <PageIntro
         eyebrow="Learning progress"
         title="Track progress across every roadmap"
-        description="Review how much you have completed, what is still active, and where momentum is building."
+        description="Review how much you have completed, which weak points need repetition, and where momentum is building this week."
       />
 
       {roadmaps.length === 0 ? (
         <EmptyState icon={TrendingUp} title="No progress yet" description="Start a roadmap to begin tracking your learning performance." />
       ) : (
         <div className="space-y-5">
+          {weeklyInsights ? (
+            <SectionCard>
+              <div className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Weekly judgment</p>
+                  <h2 className="mt-2 text-3xl font-bold">{weeklyInsights.summary?.headline}</h2>
+                  <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{weeklyInsights.summary?.message}</p>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    {[
+                      ['Completed this week', weeklyInsights.stats?.completed_this_week ?? 0],
+                      ['Active roadmaps', weeklyInsights.stats?.active_roadmaps ?? 0],
+                      ['Weak points', weeklyInsights.stats?.weak_points_count ?? 0],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-[1.3rem] bg-[var(--surface)] p-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{label}</p>
+                        <p className="mt-2 text-2xl font-extrabold">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="rounded-2xl bg-[var(--brand-orange)]/12 p-3 text-[var(--brand-orange)]">
+                      <AlertTriangle size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">Weak points to repeat</h3>
+                      <p className="text-sm text-[var(--text-secondary)]">Repeat these topics before they block next week progress.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3">
+                    {(weeklyInsights.weak_points || []).map((item) => (
+                      <div key={`${item.roadmap_id}-${item.skill_name}`} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <p className="text-sm font-bold text-[var(--brand-orange)]">{item.skill_name}</p>
+                            <p className="mt-1 text-sm font-semibold">{item.target_role}</p>
+                            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.reason}</p>
+                          </div>
+                          <span className="rounded-full bg-[var(--brand-sky)] px-3 py-2 text-xs font-bold text-[var(--brand-charcoal)]">
+                            {item.level}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 flex items-start gap-2 rounded-[1rem] bg-[var(--surface-elevated)] px-3 py-3">
+                          <RotateCcw size={16} className="mt-0.5 text-[var(--brand-blue)]" />
+                          <p className="text-sm leading-6 text-[var(--text-secondary)]">{item.recommendation}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+          ) : null}
+
           {roadmaps.map((roadmap, index) => {
             const progressPercent = calculateProgress(roadmap)
             const completed = roadmap.progress?.filter((item) => item.status === 'completed').length || 0

@@ -83,6 +83,7 @@ export const progressAPI = {
   complete: (id, data) => api.post(`/progress/${id}/complete`, data),
   trackVideo: (id, videoId) => api.post(`/progress/${id}/track-video`, { video_id: videoId }),
   getRoadmapProgress: (roadmapId) => api.get(`/progress/roadmap/${roadmapId}`),
+  getWeeklyInsights: () => api.get('/progress/weekly-insights'),
 }
 
 // ============ CERTIFICATE APIs ============

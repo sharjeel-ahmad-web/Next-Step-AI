@@ -4,15 +4,18 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use DateInterval;
 
 class GeminiService
 {
     protected string $apiKey;
     protected string $endpoint;
+    protected ?string $youtubeApiKey;
 
     public function __construct()
     {
         $this->apiKey = config('services.gemini.key', env('GEMINI_API_KEY'));
+        $this->youtubeApiKey = config('services.youtube.key', env('YOUTUBE_API_KEY'));
         // Using v1beta and flash-latest as found in model list
         $this->endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
     }
@@ -124,6 +127,12 @@ class GeminiService
     public function getYouTubeResources(string $skill, string $language = 'English'): array
     {
         try {
+            $youtubeResults = $this->getYoutubeApiResources($skill, $language);
+
+            if (!empty($youtubeResults)) {
+                return $youtubeResults;
+            }
+
             $prompt = "Provide a JSON array of 5 popular and high-quality YouTube video tutorials for learning '{$skill}' in {$language}. 
             Prioritize videos that teach in {$language} or clearly support {$language}-speaking learners.
             Each object should have:
@@ -156,6 +165,75 @@ class GeminiService
             Log::error('Gemini Video Service error: ' . $e->getMessage());
             return $this->getFallbackVideos($skill, $language);
         }
+    }
+
+    protected function getYoutubeApiResources(string $skill, string $language = 'English'): array
+    {
+        if (empty($this->youtubeApiKey)) {
+            return [];
+        }
+
+        $query = trim($skill . ' tutorial ' . $language);
+
+        $searchResponse = Http::get('https://www.googleapis.com/youtube/v3/search', [
+            'key' => $this->youtubeApiKey,
+            'part' => 'snippet',
+            'q' => $query,
+            'type' => 'video',
+            'videoEmbeddable' => 'true',
+            'maxResults' => 5,
+            'safeSearch' => 'strict',
+            'relevanceLanguage' => $this->mapLanguageToYoutubeCode($language),
+            'order' => 'relevance',
+        ]);
+
+        if ($searchResponse->failed()) {
+            Log::warning('YouTube API search failed', ['body' => $searchResponse->body()]);
+            return [];
+        }
+
+        $searchItems = $searchResponse->json('items', []);
+        $videoIds = collect($searchItems)
+            ->map(fn ($item) => data_get($item, 'id.videoId'))
+            ->filter()
+            ->values()
+            ->all();
+
+        if (empty($videoIds)) {
+            return [];
+        }
+
+        $detailsResponse = Http::get('https://www.googleapis.com/youtube/v3/videos', [
+            'key' => $this->youtubeApiKey,
+            'part' => 'contentDetails,snippet',
+            'id' => implode(',', $videoIds),
+        ]);
+
+        if ($detailsResponse->failed()) {
+            Log::warning('YouTube API details failed', ['body' => $detailsResponse->body()]);
+            return [];
+        }
+
+        $detailsMap = collect($detailsResponse->json('items', []))->keyBy('id');
+
+        return collect($videoIds)->map(function ($videoId, $index) use ($detailsMap) {
+            $video = $detailsMap->get($videoId);
+
+            if (!$video) {
+                return null;
+            }
+
+            return [
+                'id' => (string) ($index + 1),
+                'video_id' => $videoId,
+                'title' => data_get($video, 'snippet.title', 'Tutorial'),
+                'url' => 'https://www.youtube.com/watch?v=' . $videoId,
+                'thumbnail' => data_get($video, 'snippet.thumbnails.high.url')
+                    ?: data_get($video, 'snippet.thumbnails.medium.url')
+                    ?: "https://img.youtube.com/vi/{$videoId}/hqdefault.jpg",
+                'duration' => $this->formatYoutubeDuration(data_get($video, 'contentDetails.duration', 'PT0M')),
+            ];
+        })->filter()->values()->all();
     }
 
     /**
@@ -212,5 +290,38 @@ class GeminiService
                 'duration'  => 'varies',
             ],
         ];
+    }
+
+    protected function mapLanguageToYoutubeCode(string $language): string
+    {
+        return match (strtolower($language)) {
+            'urdu' => 'ur',
+            'hindi' => 'hi',
+            'arabic' => 'ar',
+            'turkish' => 'tr',
+            default => 'en',
+        };
+    }
+
+    protected function formatYoutubeDuration(string $duration): string
+    {
+        try {
+            $interval = new DateInterval($duration);
+        } catch (\Exception $e) {
+            return 'varies';
+        }
+
+        $hours = ($interval->d * 24) + $interval->h;
+        $minutes = $interval->i;
+
+        if ($hours > 0) {
+            return trim($hours . ' hr ' . ($minutes > 0 ? $minutes . ' min' : ''));
+        }
+
+        if ($minutes > 0) {
+            return $minutes . ' min';
+        }
+
+        return max(1, $interval->s) . ' sec';
     }
 }

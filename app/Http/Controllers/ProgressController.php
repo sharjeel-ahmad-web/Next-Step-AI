@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Progress;
 use App\Models\Roadmap;
 use App\Models\UserStats;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 
 class ProgressController extends Controller
@@ -36,6 +37,7 @@ class ProgressController extends Controller
                 'roadmap_id'      => $roadmapId,
                 'completed_nodes' => [],
                 'videos_watched'  => [],
+                'node_activity'   => [],
                 'status'          => 'in_progress',
                 'started_at'      => now(),
             ]);
@@ -70,13 +72,22 @@ class ProgressController extends Controller
 
             $nodeId          = (string) $request->input('node_id');
             $completedNodes  = $progress->completed_nodes ?? [];
+            $nodeActivity    = $progress->node_activity ?? [];
+            $roadmap         = Roadmap::find($progress->roadmap_id);
+            $nodeMeta        = $this->findRoadmapNode($roadmap, $nodeId);
 
             if (!in_array($nodeId, $completedNodes)) {
                 $completedNodes[] = $nodeId;
                 $progress->completed_nodes = $completedNodes;
+                $nodeActivity[] = [
+                    'node_id'      => $nodeId,
+                    'skill_name'   => $nodeMeta['skill_name'] ?? ($nodeMeta['title'] ?? 'Skill'),
+                    'title'        => $nodeMeta['title'] ?? 'Completed skill',
+                    'completed_at' => now()->toIso8601String(),
+                ];
+                $progress->node_activity = $nodeActivity;
 
                 // Check if roadmap is fully complete
-                $roadmap = Roadmap::find($progress->roadmap_id);
                 if ($roadmap && count($completedNodes) >= count($roadmap->nodes ?? [])) {
                     $progress->status       = 'completed';
                     $progress->completed_at = now();
@@ -172,5 +183,121 @@ class ProgressController extends Controller
             'node_progress' => $nodeProgress,
             'passed_quizzes' => $progress->passed_quizzes ?? []
         ]);
+    }
+
+    /**
+     * GET /api/progress/weekly-insights
+     */
+    public function getWeeklyInsights(Request $request)
+    {
+        $userId = (string) $request->user()->_id;
+        $weekStart = now()->startOfWeek();
+        $weekEnd = now()->endOfWeek();
+
+        $progressRecords = Progress::where('user_id', $userId)->get();
+        $roadmaps = Roadmap::where('user_id', $userId)->get()->keyBy('_id');
+
+        $completedThisWeek = 0;
+        $videosWatchedThisWeek = 0;
+        $activeRoadmaps = 0;
+        $weakPoints = [];
+
+        foreach ($progressRecords as $progress) {
+            $roadmap = $roadmaps->get($progress->roadmap_id);
+            if (!$roadmap) {
+                continue;
+            }
+
+            if (($progress->status ?? null) !== 'completed') {
+                $activeRoadmaps++;
+            }
+
+            foreach (($progress->node_activity ?? []) as $activity) {
+                $completedAt = data_get($activity, 'completed_at');
+
+                if ($completedAt && Carbon::parse($completedAt)->between($weekStart, $weekEnd)) {
+                    $completedThisWeek++;
+                }
+            }
+
+            foreach (($roadmap->nodes ?? []) as $node) {
+                $nodeId = (string) ($node['id'] ?? '');
+                $isCompleted = in_array($nodeId, $progress->completed_nodes ?? []);
+
+                if ($isCompleted) {
+                    continue;
+                }
+
+                $weakPoints[] = [
+                    'roadmap_id' => (string) $roadmap->_id,
+                    'target_role' => $roadmap->target_role,
+                    'skill_name' => $node['skill_name'] ?? ($node['title'] ?? 'Skill'),
+                    'title' => $node['title'] ?? 'Learning milestone',
+                    'level' => $node['level'] ?? 'Beginner',
+                    'estimated_time' => $node['estimated_time'] ?? '1 week',
+                    'reason' => 'This skill is still incomplete and is slowing overall roadmap progress.',
+                    'recommendation' => 'Repeat this topic, rewatch one focused lesson, and complete a short revision session before moving ahead.',
+                ];
+            }
+
+            $videosWatchedThisWeek += count($progress->videos_watched ?? []);
+        }
+
+        $topWeakPoints = collect($weakPoints)->take(4)->values();
+        $summary = $this->buildWeeklySummary($completedThisWeek, $activeRoadmaps, $topWeakPoints->count());
+
+        return response()->json([
+            'week_range' => [
+                'start' => $weekStart->toDateString(),
+                'end' => $weekEnd->toDateString(),
+            ],
+            'summary' => $summary,
+            'stats' => [
+                'completed_this_week' => $completedThisWeek,
+                'active_roadmaps' => $activeRoadmaps,
+                'videos_watched_total' => $videosWatchedThisWeek,
+                'weak_points_count' => $topWeakPoints->count(),
+            ],
+            'weak_points' => $topWeakPoints,
+        ]);
+    }
+
+    protected function findRoadmapNode(?Roadmap $roadmap, string $nodeId): array
+    {
+        if (!$roadmap) {
+            return [];
+        }
+
+        foreach (($roadmap->nodes ?? []) as $node) {
+            if ((string) ($node['id'] ?? '') === $nodeId) {
+                return $node;
+            }
+        }
+
+        return [];
+    }
+
+    protected function buildWeeklySummary(int $completedThisWeek, int $activeRoadmaps, int $weakPointsCount): array
+    {
+        if ($completedThisWeek === 0) {
+            return [
+                'headline' => 'Your weekly progress is low.',
+                'message' => 'Repeat one weak topic this week and finish at least one blocked skill to rebuild momentum.',
+            ];
+        }
+
+        if ($completedThisWeek < 3) {
+            return [
+                'headline' => 'Momentum is building, but some weak points need revision.',
+                'message' => 'Repeat the highlighted skills before they turn into bigger gaps across your roadmap.',
+            ];
+        }
+
+        return [
+            'headline' => 'Good weekly momentum.',
+            'message' => $weakPointsCount > 0
+                ? 'You are progressing well. Repeat the highlighted weak points once so they do not slow next week.'
+                : 'You are progressing well and have no urgent weak points highlighted right now.',
+        ];
     }
 }

@@ -82,6 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/complete',      [ProgressController::class, 'complete']);
         Route::post('/{id}/track-video',   [ProgressController::class, 'trackVideo']);
         Route::get('/roadmap/{roadmapId}', [ProgressController::class, 'getRoadmapProgress']);
+        Route::get('/weekly-insights',     [ProgressController::class, 'getWeeklyInsights']);
     });
 
     // Certificates
