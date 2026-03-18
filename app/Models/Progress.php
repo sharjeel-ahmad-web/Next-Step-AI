@@ -16,6 +16,7 @@ class Progress extends Model
         'videos_watched',
         'passed_quizzes',
         'node_activity',
+        'practice_tasks',
         'status',
         'started_at',
         'completed_at',
@@ -26,6 +27,7 @@ class Progress extends Model
         'videos_watched'  => 'array',
         'passed_quizzes'  => 'array',
         'node_activity'   => 'array',
+        'practice_tasks'  => 'array',
         'started_at'      => 'datetime',
         'completed_at'    => 'datetime',
     ];

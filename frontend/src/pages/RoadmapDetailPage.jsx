@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { CheckCircle, Circle, Play, HelpCircle, Lock, RefreshCw } from 'lucide-react'
+import { CheckCircle, Circle, Play, HelpCircle, Lock, RefreshCw, Briefcase, ClipboardCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { roadmapAPI, progressAPI } from '../services/api'
 import QuizModal from '../components/QuizModal'
@@ -24,6 +24,7 @@ const RoadmapDetailPage = () => {
   const [roadmap, setRoadmap] = useState(null)
   const [progress, setProgress] = useState([])
   const [passedQuizzes, setPassedQuizzes] = useState([])
+  const [practiceTasks, setPracticeTasks] = useState([])
   const [videos, setVideos] = useState([])
   const [selectedNode, setSelectedNode] = useState(null)
   const [selectedVideo, setSelectedVideo] = useState(null)
@@ -48,6 +49,7 @@ const RoadmapDetailPage = () => {
       const progressData = progressResponse.data
       setProgress(normalizeProgress(progressData))
       setPassedQuizzes(progressData?.passed_quizzes || [])
+      setPracticeTasks(progressData?.practice_tasks || [])
     } catch (error) {
       toast.error('Failed to load roadmap')
     } finally {
@@ -59,6 +61,11 @@ const RoadmapDetailPage = () => {
     const map = new Map()
     progress.forEach((item) => map.set(String(item.node_id), item))
     return map
+  }, [progress])
+
+  const currentProgressId = useMemo(() => {
+    const first = progress[0]
+    return first?.id || first?._id || first?.progress_id || null
   }, [progress])
 
   const handleNodeClick = async (node, isLocked) => {
@@ -107,6 +114,24 @@ const RoadmapDetailPage = () => {
       toast.success('Skill mastered! +50 XP')
     } catch (error) {
       toast.error('Failed to complete node')
+    }
+  }
+
+  const handlePracticeTaskToggle = async (taskId, completed) => {
+    if (!currentProgressId) {
+      toast.error('Start this roadmap first to unlock assignments.')
+      return
+    }
+
+    try {
+      const { data } = await progressAPI.updatePracticeTask(currentProgressId, {
+        task_id: taskId,
+        completed,
+      })
+      setPracticeTasks(data.practice_tasks || [])
+      toast.success(completed ? 'Assignment marked complete' : 'Assignment reopened')
+    } catch (error) {
+      toast.error('Failed to update assignment')
     }
   }
 
@@ -216,6 +241,51 @@ const RoadmapDetailPage = () => {
                   <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">{selectedNode.description}</p>
                 </div>
 
+                <div className="mt-4 rounded-[1.5rem] bg-[var(--surface)] p-4">
+                  <div className="flex items-start gap-3">
+                    <Briefcase className="mt-1 text-[var(--brand-orange)]" size={18} />
+                    <div>
+                      <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Professional learning plan</p>
+                      <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                        Watch the lesson, pass the quiz, repeat the weak part once more, then build one mini task around this skill so it becomes job-usable knowledge.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-[1.5rem] bg-[var(--surface)] p-4">
+                  <div className="mb-3 flex items-center gap-3">
+                    <ClipboardCheck className="text-[var(--brand-green)]" size={18} />
+                    <div>
+                      <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Mini project assignment</p>
+                      <p className="text-sm text-[var(--text-secondary)]">Use this task to turn theory into job-ready proof.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {practiceTasks
+                      .filter((task) => String(task.node_id) === String(selectedNode.id))
+                      .map((task) => (
+                        <div key={task.task_id} className="rounded-[1.2rem] bg-[var(--surface-elevated)] p-4">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                              <p className="text-sm font-bold">{task.title}</p>
+                              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{task.deliverable}</p>
+                              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{task.revision_step}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handlePracticeTaskToggle(task.task_id, !task.completed)}
+                              className={task.completed ? 'btn-secondary' : 'btn-primary'}
+                            >
+                              {task.completed ? 'Completed' : 'Mark Done'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
                 {selectedVideo ? (
                   <div className="mt-5">
                     <div className="aspect-video overflow-hidden rounded-[1.5rem] border border-[var(--border-soft)] bg-black">
@@ -241,6 +311,13 @@ const RoadmapDetailPage = () => {
                         <span>Take Assessment Quiz</span>
                       </button>
                     )}
+
+                    <div className="mt-4 rounded-[1.3rem] bg-[var(--surface)] p-4">
+                      <p className="text-sm font-bold">Practice after video</p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                        Build something small with this skill, write down the main idea in your own words, and update your resume once you can explain the result confidently.
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="mt-5 rounded-[1.5rem] bg-[var(--surface)] p-6 text-center">

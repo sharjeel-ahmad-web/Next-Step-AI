@@ -125,4 +125,21 @@ export const quizAPI = {
   submit: (data) => api.post('/quiz/submit', data), // quiz_id, answers, progress_id, node_id
 }
 
+export const resumeAPI = {
+  getAll: () => api.get('/resumes'),
+  getOne: (id) => api.get(`/resumes/${id}`),
+  generate: (data) => api.post('/resumes/generate', data),
+  improveExisting: (formData) => api.post('/resumes/improve-existing', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  update: (id, data) => api.put(`/resumes/${id}`, data),
+  download: (id, format = 'pdf') => api.get(`/resumes/${id}/download`, {
+    params: { format },
+    responseType: 'blob',
+  }),
+  uploadPhoto: (id, formData) => api.post(`/resumes/${id}/photo`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+}
+
 export default api

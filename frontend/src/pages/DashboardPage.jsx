@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Target, Map, TrendingUp, Award, Zap, Calendar, ArrowRight } from 'lucide-react'
+import { Target, Map, TrendingUp, Award, Zap, Calendar, ArrowRight, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '../store/authStore'
 import { gamificationAPI, roadmapAPI } from '../services/api'
@@ -43,6 +43,7 @@ const DashboardPage = () => {
   const quickActions = useMemo(
     () => [
       { icon: Target, title: 'Analyze Skills', desc: 'Upload a resume and identify learning gaps.', link: '/analyze', tone: 'orange' },
+      { icon: FileText, title: 'Resume Builder', desc: 'Generate an ATS-focused international resume from a prompt or old CV.', link: '/resume-builder', tone: 'blue' },
       { icon: Map, title: 'Roadmaps', desc: 'Open your guided learning paths.', link: '/roadmaps', tone: 'lilac' },
       { icon: TrendingUp, title: 'Progress', desc: 'Track completion and current momentum.', link: '/progress', tone: 'green' },
       { icon: Award, title: 'Certificates', desc: 'Review and export earned certificates.', link: '/certificates', tone: 'blue' },
@@ -104,12 +105,12 @@ const DashboardPage = () => {
 
         <SectionCard>
           <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Weekly focus</p>
-          <h2 className="mt-2 text-2xl font-bold">Stay consistent</h2>
+          <h2 className="mt-2 text-2xl font-bold">Build job-ready habits</h2>
           <div className="mt-5 space-y-3">
             {[
-              ['Language mode', `${language.label} is currently selected for preparation and video discovery`],
-              ['Responsive layout', 'Optimized for mobile, tablet, desktop, and wide classroom screens'],
-              ['Certificate path', 'Finish a roadmap to unlock shareable proof'],
+              ['Revision first', 'Repeat one weak skill before starting a completely new topic'],
+              ['Project proof', 'Turn roadmap skills into at least one portfolio-ready task every week'],
+              ['Interview readiness', 'Use resume builder after each roadmap milestone to reflect real improvement'],
             ].map(([title, copy]) => (
               <div key={title} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
                 <p className="text-sm font-bold">{title}</p>
@@ -167,6 +168,26 @@ const DashboardPage = () => {
             ))}
           </div>
         )}
+      </SectionCard>
+
+      <SectionCard className="mt-8">
+        <div className="mb-5">
+          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Professional path</p>
+          <h2 className="mt-2 text-2xl font-bold">How this app helps you become job ready</h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            ['1. Find the gap', 'Analyze your current skill level against a real target role.'],
+            ['2. Learn with order', 'Follow a roadmap instead of random videos and disconnected tutorials.'],
+            ['3. Validate knowledge', 'Use quizzes, repetition, and progress tracking to reduce weak points.'],
+            ['4. Present yourself', 'Update your resume with stronger achievements and apply with more confidence.'],
+          ].map(([title, copy]) => (
+            <div key={title} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
+              <p className="text-sm font-bold">{title}</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{copy}</p>
+            </div>
+          ))}
+        </div>
       </SectionCard>
     </PageContainer>
   )

@@ -38,6 +38,7 @@ class ProgressController extends Controller
                 'completed_nodes' => [],
                 'videos_watched'  => [],
                 'node_activity'   => [],
+                'practice_tasks'  => $this->buildPracticeTasksFromRoadmap(Roadmap::find($roadmapId)),
                 'status'          => 'in_progress',
                 'started_at'      => now(),
             ]);
@@ -181,7 +182,51 @@ class ProgressController extends Controller
 
         return response()->json([
             'node_progress' => $nodeProgress,
-            'passed_quizzes' => $progress->passed_quizzes ?? []
+            'passed_quizzes' => $progress->passed_quizzes ?? [],
+            'practice_tasks' => $progress->practice_tasks ?? $this->buildPracticeTasksFromRoadmap($roadmap),
+        ]);
+    }
+
+    /**
+     * POST /api/progress/{id}/practice-task
+     */
+    public function updatePracticeTask(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'task_id' => 'required|string',
+            'completed' => 'required|boolean',
+        ]);
+
+        $progress = Progress::where('_id', $id)
+            ->where('user_id', (string) $request->user()->_id)
+            ->first();
+
+        if (!$progress) {
+            return response()->json(['message' => 'Progress record not found'], 404);
+        }
+
+        $tasks = $progress->practice_tasks ?? [];
+        $taskUpdated = false;
+
+        foreach ($tasks as &$task) {
+            if ((string) ($task['task_id'] ?? '') === $validated['task_id']) {
+                $task['completed'] = (bool) $validated['completed'];
+                $task['completed_at'] = $validated['completed'] ? now()->toIso8601String() : null;
+                $taskUpdated = true;
+                break;
+            }
+        }
+
+        if (!$taskUpdated) {
+            return response()->json(['message' => 'Practice task not found'], 404);
+        }
+
+        $progress->practice_tasks = $tasks;
+        $progress->save();
+
+        return response()->json([
+            'success' => true,
+            'practice_tasks' => $progress->practice_tasks,
         ]);
     }
 
@@ -201,6 +246,7 @@ class ProgressController extends Controller
         $videosWatchedThisWeek = 0;
         $activeRoadmaps = 0;
         $weakPoints = [];
+        $weeklyAssignments = [];
 
         foreach ($progressRecords as $progress) {
             $roadmap = $roadmaps->get($progress->roadmap_id);
@@ -241,9 +287,24 @@ class ProgressController extends Controller
             }
 
             $videosWatchedThisWeek += count($progress->videos_watched ?? []);
+
+            foreach (($progress->practice_tasks ?? []) as $task) {
+                if (!($task['completed'] ?? false)) {
+                    $weeklyAssignments[] = [
+                        'task_id' => $task['task_id'] ?? '',
+                        'roadmap_id' => (string) $roadmap->_id,
+                        'target_role' => $roadmap->target_role,
+                        'skill_name' => $task['skill_name'] ?? 'Practice task',
+                        'title' => $task['title'] ?? 'Practice assignment',
+                        'deliverable' => $task['deliverable'] ?? '',
+                        'revision_step' => $task['revision_step'] ?? '',
+                    ];
+                }
+            }
         }
 
         $topWeakPoints = collect($weakPoints)->take(4)->values();
+        $topAssignments = collect($weeklyAssignments)->take(4)->values();
         $summary = $this->buildWeeklySummary($completedThisWeek, $activeRoadmaps, $topWeakPoints->count());
 
         return response()->json([
@@ -257,8 +318,10 @@ class ProgressController extends Controller
                 'active_roadmaps' => $activeRoadmaps,
                 'videos_watched_total' => $videosWatchedThisWeek,
                 'weak_points_count' => $topWeakPoints->count(),
+                'assignments_count' => $topAssignments->count(),
             ],
             'weak_points' => $topWeakPoints,
+            'weekly_assignments' => $topAssignments,
         ]);
     }
 
@@ -299,5 +362,31 @@ class ProgressController extends Controller
                 ? 'You are progressing well. Repeat the highlighted weak points once so they do not slow next week.'
                 : 'You are progressing well and have no urgent weak points highlighted right now.',
         ];
+    }
+
+    protected function buildPracticeTasksFromRoadmap(?Roadmap $roadmap): array
+    {
+        if (!$roadmap) {
+            return [];
+        }
+
+        $tasks = [];
+
+        foreach (($roadmap->nodes ?? []) as $node) {
+            $nodeId = (string) ($node['id'] ?? '');
+            $skillName = $node['skill_name'] ?? ($node['title'] ?? 'Skill');
+            $tasks[] = [
+                'task_id' => "task-{$nodeId}",
+                'node_id' => $nodeId,
+                'skill_name' => $skillName,
+                'title' => "Build one mini project for {$skillName}",
+                'deliverable' => "Create one small practical task or portfolio-ready example using {$skillName}.",
+                'revision_step' => "Revise the concept once and explain the solution in your own words.",
+                'completed' => false,
+                'completed_at' => null,
+            ];
+        }
+
+        return $tasks;
     }
 }

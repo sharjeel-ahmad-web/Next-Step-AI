@@ -10,6 +10,7 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ResumeController;
 
 // ============================================================
 // PUBLIC Routes (no authentication required)
@@ -76,11 +77,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}/videos',[RoadmapController::class, 'getVideos']);
     });
 
+    // Resume Builder
+    Route::prefix('resumes')->group(function () {
+        Route::get('/', [ResumeController::class, 'index']);
+        Route::post('/generate', [ResumeController::class, 'generate']);
+        Route::post('/improve-existing', [ResumeController::class, 'improveExisting']);
+        Route::get('/{id}', [ResumeController::class, 'show']);
+        Route::get('/{id}/download', [ResumeController::class, 'download']);
+        Route::put('/{id}', [ResumeController::class, 'update']);
+        Route::post('/{id}/photo', [ResumeController::class, 'uploadPhoto']);
+    });
+
     // Progress Tracking
     Route::prefix('progress')->group(function () {
         Route::post('/start',              [ProgressController::class, 'start']);
         Route::post('/{id}/complete',      [ProgressController::class, 'complete']);
         Route::post('/{id}/track-video',   [ProgressController::class, 'trackVideo']);
+        Route::post('/{id}/practice-task', [ProgressController::class, 'updatePracticeTask']);
         Route::get('/roadmap/{roadmapId}', [ProgressController::class, 'getRoadmapProgress']);
         Route::get('/weekly-insights',     [ProgressController::class, 'getWeeklyInsights']);
     });

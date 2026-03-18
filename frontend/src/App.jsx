@@ -22,6 +22,7 @@ import CertificateVerifyPage from './pages/CertificateVerifyPage'
 import ContactPage from './pages/ContactPage'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
+import ResumeBuilderPage from './pages/ResumeBuilderPage'
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
             <Route path="/certificates" element={<CertificatesPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/resume-builder" element={<ResumeBuilderPage />} />
           </Route>
 
           {/* Admin Routes */}

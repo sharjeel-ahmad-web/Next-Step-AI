@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Award, CalendarDays, CheckCircle2, Globe2, Map, MoonStar, Sparkles, Target, TrendingUp, Users } from 'lucide-react'
+import { ArrowRight, Award, CalendarDays, CheckCircle2, Globe2, Map, MoonStar, Sparkles, Target, TrendingUp, Users, FileText } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
 import LanguageSwitcher from '../components/LanguageSwitcher'
@@ -32,6 +32,14 @@ const LandingPage = () => {
     'Preparation language saved across the app',
     'Videos fetched according to selected learning language',
     'Progress-based certificate generation',
+  ]
+
+  const resumeTemplates = [
+    ['Classic Serif', 'Finance, law, and polished leadership profiles', 'bg-[var(--brand-cream)]'],
+    ['Tech Minimal', 'Software engineers, data roles, and startup teams', 'bg-[var(--brand-sky)]'],
+    ['Creative Modern', 'Design, marketing, media, and portfolio-driven roles', 'bg-[var(--brand-orange)]/20'],
+    ['Executive Bold', 'Director and C-suite applications with strong authority', 'bg-[var(--brand-charcoal)]/16'],
+    ['Global Pro', 'Balanced international resume for cross-industry hiring', 'bg-[var(--brand-green)]/18'],
   ]
 
   const today = new Intl.DateTimeFormat('en-US', {
@@ -99,6 +107,9 @@ const LandingPage = () => {
                 <Link to="/register" className="btn-primary text-base sm:text-lg">
                 Start Your Roadmap
                 <ArrowRight size={18} />
+              </Link>
+              <Link to="/resume-builder" className="btn-secondary text-base sm:text-lg">
+                Build International Resume
               </Link>
               <Link to="/login" className="btn-secondary text-base sm:text-lg">
                 Open Learner Workspace
@@ -255,6 +266,107 @@ const LandingPage = () => {
       <section className="px-3 py-10 sm:px-5 lg:px-6">
         <div className="page-shell">
           <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+          >
+            <div className="space-y-3">
+              <span className="eyebrow">Resume builder</span>
+              <h2 className="max-w-3xl text-3xl font-extrabold sm:text-4xl">Create an international resume, improve an old CV, and export it in a professional design.</h2>
+            </div>
+            <p className="max-w-xl text-base leading-7 text-[var(--text-secondary)]">
+              Users can paste a short prompt or upload an existing resume, let AI improve it, compare old vs new content, and choose from five professional layouts.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+            {resumeTemplates.map(([title, desc, accent], index) => (
+              <motion.article
+                key={title}
+                initial={{ opacity: 0, y: 22 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.06 }}
+                className="glass-card group"
+              >
+                <div className={`mb-4 h-20 rounded-[1.4rem] ${accent}`} />
+                <h3 className="text-lg font-bold">{title}</h3>
+                <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">{desc}</p>
+              </motion.article>
+            ))}
+          </div>
+
+          <div className="mt-8 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+            <div className="space-y-4">
+              <span className="eyebrow">
+                <FileText size={14} />
+                Resume preview
+              </span>
+              <h3 className="text-3xl font-extrabold sm:text-4xl">A polished resume becomes part of the learning journey, not an afterthought.</h3>
+              <p className="max-w-2xl text-base leading-8 text-[var(--text-secondary)]">
+                Learners can improve an old resume, compare weak content with AI-enhanced content, and export a cleaner international format while they are still building skills.
+              </p>
+            </div>
+
+            <div className="glass-card rounded-[2rem]">
+              <div className="rounded-[1.6rem] border border-[var(--border-soft)] bg-white p-5 text-slate-900 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+                  <div>
+                    <p className="text-2xl font-extrabold">Ali Hassan</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-500">Frontend Developer | React | UI Systems</p>
+                  </div>
+                  <div className="h-16 w-16 rounded-2xl bg-slate-100" />
+                </div>
+
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Summary</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Results-focused frontend developer with experience building responsive interfaces, improving usability, and shipping production-ready dashboard features.
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Skills</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {['React', 'Tailwind CSS', 'APIs', 'JavaScript', 'UI Testing'].map((item) => (
+                        <span key={item} className="rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Experience</p>
+                    <div className="mt-2 rounded-2xl bg-slate-50 p-4">
+                      <p className="text-sm font-bold">Frontend Developer - Semsons</p>
+                      <p className="mt-1 text-xs text-slate-500">Jan 2023 - Present</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Spearheaded reusable dashboard UI development, reducing delivery time by [ADD METRIC] and improving consistency across product screens.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link to="/resume-builder" className="btn-primary">
+              Build International Resume
+            </Link>
+            <Link to="/register" className="btn-secondary">
+              Start With Account
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-3 py-10 sm:px-5 lg:px-6">
+        <div className="page-shell">
+          <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -275,6 +387,9 @@ const LandingPage = () => {
                 </Link>
                 <Link to="/login" className="btn-secondary">
                   Open Platform
+                </Link>
+                <Link to="/resume-builder" className="btn-secondary">
+                  Build International Resume
                 </Link>
                 <Link to="/contact" className="btn-secondary">
                   Contact Team

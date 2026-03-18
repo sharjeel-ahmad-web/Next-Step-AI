@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, CheckCircle, Clock, Award, AlertTriangle, RotateCcw } from 'lucide-react'
+import { TrendingUp, CheckCircle, Clock, Award, AlertTriangle, RotateCcw, ClipboardCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { roadmapAPI, progressAPI } from '../services/api'
 import { EmptyState, LoadingScreen, PageContainer, PageIntro, SectionCard } from '../components/AppShell'
@@ -74,12 +74,16 @@ const ProgressPage = () => {
                   <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Weekly judgment</p>
                   <h2 className="mt-2 text-3xl font-bold">{weeklyInsights.summary?.headline}</h2>
                   <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{weeklyInsights.summary?.message}</p>
+                  <div className="mt-4 rounded-[1.2rem] bg-[var(--surface)] p-4 text-sm leading-6 text-[var(--text-secondary)]">
+                    Professional growth rule: repeat weak topics, finish one real task, and only then move to the next big concept.
+                  </div>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-5 grid gap-3 sm:grid-cols-4">
                     {[
                       ['Completed this week', weeklyInsights.stats?.completed_this_week ?? 0],
                       ['Active roadmaps', weeklyInsights.stats?.active_roadmaps ?? 0],
                       ['Weak points', weeklyInsights.stats?.weak_points_count ?? 0],
+                      ['Assignments', weeklyInsights.stats?.assignments_count ?? 0],
                     ].map(([label, value]) => (
                       <div key={label} className="rounded-[1.3rem] bg-[var(--surface)] p-4">
                         <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{label}</p>
@@ -118,10 +122,38 @@ const ProgressPage = () => {
                           <RotateCcw size={16} className="mt-0.5 text-[var(--brand-blue)]" />
                           <p className="text-sm leading-6 text-[var(--text-secondary)]">{item.recommendation}</p>
                         </div>
+                        <div className="mt-3 rounded-[1rem] bg-[var(--brand-sky)]/25 px-3 py-3 text-sm leading-6 text-[var(--brand-charcoal)]">
+                          Job-ready move: revise this topic, build one mini practice task, and explain it in your own words before marking it strong.
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
+              </div>
+            </SectionCard>
+          ) : null}
+
+          {weeklyInsights?.weekly_assignments?.length ? (
+            <SectionCard>
+              <div className="mb-4 flex items-center gap-3">
+                <ClipboardCheck className="text-[var(--brand-green)]" size={20} />
+                <div>
+                  <h2 className="text-2xl font-bold">Weekly mini project assignments</h2>
+                  <p className="text-sm text-[var(--text-secondary)]">These tasks convert learning into practical proof of skill.</p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {weeklyInsights.weekly_assignments.map((item) => (
+                  <div key={item.task_id} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
+                    <p className="text-sm font-bold">{item.title}</p>
+                    <p className="mt-1 text-sm font-semibold text-[var(--brand-blue)]">{item.target_role}</p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.deliverable}</p>
+                    <div className="mt-3 rounded-[1rem] bg-[var(--surface-elevated)] px-3 py-3 text-sm leading-6 text-[var(--text-secondary)]">
+                      {item.revision_step}
+                    </div>
+                  </div>
+                ))}
               </div>
             </SectionCard>
           ) : null}
