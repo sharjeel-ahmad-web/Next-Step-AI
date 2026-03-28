@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, User, Trophy, Map, BarChart3, Award, Home, Menu, X, FileText } from 'lucide-react'
+import { LogOut, User, Trophy, Map, BarChart3, Award, Home, Menu, X, FileText, Briefcase } from 'lucide-react'
 import { motion } from 'framer-motion'
 import useAuthStore from '../store/authStore'
 import ThemeToggle from './ThemeToggle'
@@ -18,6 +18,7 @@ const Navbar = () => {
       { to: '/roadmaps', label: 'Roadmaps', icon: Map },
       { to: '/progress', label: 'Progress', icon: BarChart3 },
       { to: '/resume-builder', label: 'Resume', icon: FileText },
+      { to: '/jobs', label: 'Jobs', icon: Briefcase },
       { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
       { to: '/certificates', label: 'Certificates', icon: Award },
     ],

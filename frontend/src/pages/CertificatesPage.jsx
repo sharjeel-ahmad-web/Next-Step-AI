@@ -52,8 +52,34 @@ const CertificatesPage = () => {
     }
   }
 
-  const handleDownload = (id, format = 'pdf') => {
-    window.open(certificateAPI.download(id, format), '_blank')
+  const handleDownload = async (id, format = 'pdf') => {
+    try {
+      const response = await certificateAPI.download(id, format)
+
+      const disposition = response.headers['content-disposition']
+      const fallbackName = `Certificate.${format}`
+      const filenameMatch = disposition?.match(/filename=\"?([^\";]+)\"?/)
+      const filename = filenameMatch?.[1] || fallbackName
+
+      const mimeType =
+        format === 'pdf'
+          ? 'application/pdf'
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+      const blob = new Blob([response.data], { type: mimeType })
+      const url = window.URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      toast.error('Failed to download certificate')
+    }
   }
 
   if (loading) {

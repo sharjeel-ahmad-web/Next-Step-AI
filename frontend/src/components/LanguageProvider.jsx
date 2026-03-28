@@ -25,6 +25,11 @@ export const LanguageProvider = ({ children }) => {
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, languageCode)
+
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = languageCode
+      document.documentElement.setAttribute('data-learning-language', languageCode)
+    }
   }, [languageCode])
 
   const value = useMemo(() => {

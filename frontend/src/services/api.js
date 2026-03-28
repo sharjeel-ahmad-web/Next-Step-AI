@@ -91,7 +91,11 @@ export const certificateAPI = {
   getAll: () => api.get('/certificates'),
   generate: (roadmapId) => api.post(`/certificates/generate/${roadmapId}`),
   verify: (id) => api.get(`/certificates/verify/${id}`),
-  download: (id, format = 'pdf') => `${API_BASE_URL}/certificates/${id}/download?format=${format}`,
+  download: (id, format = 'pdf') =>
+    api.get(`/certificates/${id}/download`, {
+      params: { format },
+      responseType: 'blob',
+    }),
 }
 
 // ============ PROFILE APIs ============
@@ -101,6 +105,7 @@ export const profileAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   deleteAvatar: () => api.delete('/profile/avatar'),
+  saveLocation: (coords) => api.post('/profile/location', coords),
 }
 
 // ============ GAMIFICATION APIs ============
@@ -142,6 +147,14 @@ export const resumeAPI = {
   uploadPhoto: (id, formData) => api.post(`/resumes/${id}/photo`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+}
+
+// ============ JOB DISCOVERY APIs ============
+export const jobsAPI = {
+  fetchLatest: (payload = {}) => api.post('/jobs/fetch', payload),
+  list: (params = {}) => api.get('/jobs', { params }),
+  nearby: () => api.get('/jobs/nearby'),
+  create: (payload) => api.post('/jobs', payload),
 }
 
 export default api

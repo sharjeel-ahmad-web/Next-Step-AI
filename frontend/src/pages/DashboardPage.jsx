@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Target, Map, TrendingUp, Award, Zap, Calendar, ArrowRight, FileText, FolderKanban } from 'lucide-react'
+import { Target, Map, TrendingUp, Award, Zap, Calendar, ArrowRight, FileText, Briefcase, Compass } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '../store/authStore'
-import { gamificationAPI, roadmapAPI, progressAPI } from '../services/api'
+import { gamificationAPI, roadmapAPI, jobsAPI } from '../services/api'
 import { EmptyState, LoadingScreen, PageContainer, PageIntro, SectionCard, StatCard } from '../components/AppShell'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
 import LanguageSwitcher from '../components/LanguageSwitcher'
@@ -22,20 +22,20 @@ const DashboardPage = () => {
   const { user } = useAuthStore()
   const [stats, setStats] = useState(null)
   const [roadmaps, setRoadmaps] = useState([])
-  const [weeklyInsights, setWeeklyInsights] = useState(null)
+  const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsResponse, roadmapsResponse, progressResponse] = await Promise.all([
+        const [statsResponse, roadmapsResponse, jobsResponse] = await Promise.all([
           gamificationAPI.getStats(),
           roadmapAPI.getAll(),
-          progressAPI.getWeeklyInsights(),
+          jobsAPI.list().catch(() => ({ data: [] })),
         ])
         setStats(statsResponse.data)
         setRoadmaps(roadmapsResponse.data)
-        setWeeklyInsights(progressResponse.data)
+        setJobs(jobsResponse.data || [])
       } catch (error) {
         toast.error('Failed to load dashboard data')
       } finally {
@@ -48,20 +48,20 @@ const DashboardPage = () => {
 
   const quickActions = useMemo(
     () => [
-      { icon: Target, title: 'Analyze Skills', desc: 'Upload a resume and identify learning gaps.', link: '/analyze', tone: 'orange' },
-      { icon: FileText, title: 'Resume Builder', desc: 'Generate an ATS-focused international resume from a prompt or old CV.', link: '/resume-builder', tone: 'blue' },
-      { icon: Map, title: 'Roadmaps', desc: 'Open your guided learning paths.', link: '/roadmaps', tone: 'lilac' },
-      { icon: TrendingUp, title: 'Progress', desc: 'Track completion and current momentum.', link: '/progress', tone: 'green' },
-      { icon: Award, title: 'Certificates', desc: 'Review and export earned certificates.', link: '/certificates', tone: 'blue' },
-      { icon: FolderKanban, title: 'Portfolio Showcase', desc: 'Review practical mini projects and portfolio-ready proof of work.', link: '/portfolio-showcase', tone: 'green' },
+      { icon: Target, title: 'Analyze skills', desc: 'Upload a resume and find gaps.', link: '/analyze', tone: 'orange' },
+      { icon: Map, title: 'Open roadmap', desc: 'Jump back into your path.', link: '/roadmaps', tone: 'blue' },
+      { icon: Briefcase, title: 'Find jobs', desc: 'Fetch roles near you.', link: '/jobs', tone: 'green' },
+      { icon: Award, title: 'Download certificate', desc: 'Export and share proof.', link: '/certificates', tone: 'green' },
     ],
     [],
   )
 
-  const jobReadinessScore = Math.min(
-    100,
-    Math.round(((stats?.xp || 0) / 5) + ((weeklyInsights?.stats?.completed_this_week || 0) * 10) + ((weeklyInsights?.stats?.assignments_count || 0) * 5)),
-  )
+  const primaryNextAction = useMemo(() => {
+    if (roadmaps.length > 0) {
+      return { label: 'Continue roadmap', link: `/roadmap/${roadmaps[0].id}` }
+    }
+    return { label: 'Start with skill analysis', link: '/analyze' }
+  }, [roadmaps])
 
   if (loading) {
     return <LoadingScreen label="Loading your dashboard..." />
@@ -76,27 +76,22 @@ const DashboardPage = () => {
         actions={<LanguageSwitcher />}
       />
 
-      <div className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={Zap} label="Total XP" value={stats?.xp || 0} tone="orange" detail="Gamified progress across your roadmap work." />
-        <StatCard icon={TrendingUp} label="Current Level" value={stats?.level || 1} tone="blue" detail="Your current learner rank." />
-        <StatCard icon={Map} label="Active Roadmaps" value={roadmaps.length} tone="green" detail="Paths currently available to continue." />
-        <StatCard icon={Calendar} label="Day Streak" value={stats?.streak || 0} tone="lilac" detail="Consistency tracked day by day." />
+      <div className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <StatCard icon={Zap} label="XP" value={stats?.xp || 0} tone="orange" detail="Total earned" />
+        <StatCard icon={Map} label="Active roadmaps" value={roadmaps.length} tone="green" detail="Keep momentum" />
+        <StatCard icon={Calendar} label="Day streak" value={stats?.streak || 0} tone="lilac" detail="Consistency" />
       </div>
 
       <SectionCard className="mb-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Job readiness</p>
-            <h2 className="mt-2 text-3xl font-bold">{jobReadinessScore}/100</h2>
-            <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-              This score combines roadmap progress, weekly completions, and practice-task execution to estimate how close you are to a job-ready level.
-            </p>
+            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Next action</p>
+            <h2 className="mt-2 text-2xl font-bold">Stay on track</h2>
+            <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">One clear step to move forward.</p>
           </div>
-          <div className="w-full max-w-md">
-            <div className="h-4 overflow-hidden rounded-full bg-[var(--surface)]">
-              <div className="h-full rounded-full bg-gradient-to-r from-[var(--brand-orange)] via-[var(--brand-blue)] to-[var(--brand-green)]" style={{ width: `${jobReadinessScore}%` }} />
-            </div>
-          </div>
+          <Link to={primaryNextAction.link} className="btn-primary">
+            {primaryNextAction.label}
+          </Link>
         </div>
       </SectionCard>
 
@@ -133,22 +128,87 @@ const DashboardPage = () => {
         </SectionCard>
 
         <SectionCard>
-          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Weekly focus</p>
-          <h2 className="mt-2 text-2xl font-bold">Build job-ready habits</h2>
-          <div className="mt-5 space-y-3">
-            {[
-              ['Revision first', 'Repeat one weak skill before starting a completely new topic'],
-              ['Project proof', 'Turn roadmap skills into at least one portfolio-ready task every week'],
-              ['Interview readiness', 'Use resume builder after each roadmap milestone to reflect real improvement'],
-            ].map(([title, copy]) => (
-              <div key={title} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
-                <p className="text-sm font-bold">{title}</p>
-                <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">{copy}</p>
-              </div>
+          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Quick actions</p>
+          <h2 className="mt-2 text-2xl font-bold">Pick one and go</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {quickActions.map((action, index) => (
+              <motion.div key={action.title} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }}>
+                <Link to={action.link} className="block rounded-[1.6rem] border border-[var(--border-soft)] bg-[var(--surface)] p-5 transition hover:-translate-y-1 hover:border-[var(--border-strong)]">
+                  <div
+                    className={`mb-4 inline-flex rounded-2xl p-3 ${
+                      action.tone === 'orange'
+                        ? 'bg-[var(--brand-orange)]/12 text-[var(--brand-orange)]'
+                        : action.tone === 'green'
+                          ? 'bg-[var(--brand-green)]/15 text-[var(--brand-green)]'
+                          : 'bg-[var(--brand-blue)]/12 text-[var(--brand-blue)]'
+                    }`}
+                  >
+                    <action.icon size={22} />
+                  </div>
+                  <h3 className="text-lg font-bold">{action.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{action.desc}</p>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </SectionCard>
       </div>
+
+      <SectionCard className="mb-8">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Job matches</p>
+            <h2 className="mt-2 text-2xl font-bold">Fresh roles for you</h2>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">AI-scored against your resume. Fetch more anytime.</p>
+          </div>
+          <Link to="/jobs" className="btn-secondary">
+            Open Jobs
+          </Link>
+        </div>
+
+        {jobs.length === 0 ? (
+          <EmptyState
+            icon={Briefcase}
+            title="No jobs yet"
+            description="Tap the fetch button on Jobs page to pull fresh roles."
+            action={
+              <Link to="/jobs" className="btn-primary">
+                Go to Jobs
+              </Link>
+            }
+          />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-3">
+            {jobs.slice(0, 3).map((job, idx) => (
+              <div
+                key={job._id || idx}
+                className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-4 transition hover:-translate-y-1"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{job.domain || 'Role match'}</p>
+                    <h3 className="mt-1 text-lg font-bold">{job.title}</h3>
+                    <p className="text-sm text-[var(--text-secondary)]">{job.company}</p>
+                  </div>
+                  {job.match_score !== undefined && (
+                    <span className="rounded-full bg-[var(--brand-green)]/15 px-3 py-1 text-xs font-bold text-[var(--brand-green)]">
+                      {job.match_score}% match
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+                  <Compass size={14} />
+                  <span>{job.location?.city || job.location?.address || 'Location pending'}</span>
+                </div>
+                <Link to="/jobs" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand-blue)]">
+                  View details
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
 
       <SectionCard>
         <div className="mb-5 flex items-center justify-between gap-3">
@@ -199,25 +259,7 @@ const DashboardPage = () => {
         )}
       </SectionCard>
 
-      <SectionCard className="mt-8">
-        <div className="mb-5">
-          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Professional path</p>
-          <h2 className="mt-2 text-2xl font-bold">How this app helps you become job ready</h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            ['1. Find the gap', 'Analyze your current skill level against a real target role.'],
-            ['2. Learn with order', 'Follow a roadmap instead of random videos and disconnected tutorials.'],
-            ['3. Validate knowledge', 'Use quizzes, repetition, and progress tracking to reduce weak points.'],
-            ['4. Present yourself', 'Update your resume with stronger achievements and apply with more confidence.'],
-          ].map(([title, copy]) => (
-            <div key={title} className="rounded-[1.4rem] bg-[var(--surface)] p-4">
-              <p className="text-sm font-bold">{title}</p>
-              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{copy}</p>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
+      {/* Removed extra educational blocks to keep the dashboard lightweight and focused on next actions. */}
     </PageContainer>
   )
 }

@@ -280,7 +280,7 @@ const RoadmapDetailPage = () => {
                     <div>
                       <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Professional learning plan</p>
                       <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
-                        Watch the lesson, pass the quiz, repeat the weak part once more, then build one mini task around this skill so it becomes job-usable knowledge.
+                        Watch the lesson, pass the quiz (required), repeat any weak part once more, then optionally build a mini task around this skill to make it job-usable.
                       </p>
                     </div>
                   </div>
@@ -291,7 +291,10 @@ const RoadmapDetailPage = () => {
                     <ClipboardCheck className="text-[var(--brand-green)]" size={18} />
                     <div>
                       <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Mini project assignment</p>
-                      <p className="text-sm text-[var(--text-secondary)]">Use this task to turn theory into job-ready proof.</p>
+                      <div className="mt-1 inline-flex items-center gap-2 rounded-full bg-[var(--brand-green)]/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-primary)]">
+                        Optional
+                      </div>
+                      <p className="text-sm text-[var(--text-secondary)]">Use this task to turn theory into job-ready proof. You can skip it; quizzes are the required checkpoint.</p>
                     </div>
                   </div>
 

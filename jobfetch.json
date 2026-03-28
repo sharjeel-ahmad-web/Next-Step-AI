@@ -1,0 +1,191 @@
+{
+    "info": {
+        "name": "NextStep AI API",
+        "_postman_id": "d1c5c9d4-0000-4c00-9000-000000000001",
+        "description": "Core endpoints + Smart Job Discovery",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000/api"
+        },
+        {
+            "key": "token",
+            "value": "PASTE_BEARER_TOKEN_HERE"
+        },
+        {
+            "key": "lat",
+            "value": "24.8607"
+        },
+        {
+            "key": "lng",
+            "value": "67.0011"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/health"
+            }
+        },
+        {
+            "name": "Auth - Register",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": "{{base_url}}/auth/register"
+            }
+        },
+        {
+            "name": "Auth - Login",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": "{{base_url}}/auth/login"
+            }
+        },
+        {
+            "name": "Auth - Me",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": "{{base_url}}/auth/me"
+            }
+        },
+        {
+            "name": "Profile - Save Location",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"lat\": {{lat}},\n  \"lng\": {{lng}}\n}"
+                },
+                "url": "{{base_url}}/profile/location"
+            }
+        },
+        {
+            "name": "Jobs - Fetch (trigger providers)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": "{{base_url}}/jobs/fetch"
+            }
+        },
+        {
+            "name": "Jobs - List (mine)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": "{{base_url}}/jobs"
+            }
+        },
+        {
+            "name": "Jobs - Nearby (map)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "url": "{{base_url}}/jobs/nearby"
+            }
+        },
+        {
+            "name": "Resume - Generate",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"prompt\": \"Create a frontend developer resume\",\n  \"target_role\": \"Frontend Developer\",\n  \"industry\": \"Software\",\n  \"experience_level\": \"Junior\"\n}"
+                },
+                "url": "{{base_url}}/resumes/generate"
+            }
+        },
+        {
+            "name": "Skill Gap - Analyze",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "target_role",
+                            "value": "Frontend Developer",
+                            "type": "text"
+                        },
+                        {
+                            "key": "job_description",
+                            "value": "Building React UI and consuming REST APIs",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": "{{base_url}}/skill-gap/analyze"
+            }
+        }
+    ]
+}

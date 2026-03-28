@@ -11,6 +11,7 @@ use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\JobController;
 
 // ============================================================
 // PUBLIC Routes (no authentication required)
@@ -66,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/', [ProfileController::class, 'update']);
         Route::post('/avatar', [ProfileController::class, 'uploadAvatar']);
         Route::delete('/avatar', [ProfileController::class, 'deleteAvatar']);
+        Route::post('/location', [ProfileController::class, 'saveLocation']);
     });
 
     // Roadmaps
@@ -111,6 +113,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/leaderboard', [GamificationController::class, 'getLeaderboard']);
         Route::get('/badges',      [GamificationController::class, 'getBadges']);
         Route::get('/stats',       [GamificationController::class, 'getStats']);
+    });
+
+    // Jobs
+    Route::prefix('jobs')->group(function () {
+        Route::get('/', [JobController::class, 'index']);
+        Route::get('/nearby', [JobController::class, 'nearby']);
+        Route::post('/fetch', [JobController::class, 'fetch']);
+        Route::post('/', [JobController::class, 'store']);
     });
 
     // Admin

@@ -80,6 +80,8 @@ class ResumeController extends Controller
             'resume_data' => $resumeData,
         ]);
 
+        $this->syncUserProfile($request, $resumeData);
+
         return response()->json($resume, 201);
     }
 
@@ -144,6 +146,8 @@ class ResumeController extends Controller
             'meta_data' => $metaData,
             'resume_data' => $resumeData,
         ]);
+
+        $this->syncUserProfile($request, $resumeData);
 
         return response()->json([
             'resume' => $resume,
@@ -294,5 +298,29 @@ class ResumeController extends Controller
     {
         $base = str($resume->target_role ?: 'resume')->slug('_');
         return $base . '_resume.' . $extension;
+    }
+
+    protected function syncUserProfile(Request $request, array $resumeData): void
+    {
+        $user = $request->user();
+
+        $domain = data_get($resumeData, 'personal_info.professional_title')
+            ?: data_get($resumeData, 'summary');
+
+        $skills = array_filter(array_unique(array_merge(
+            data_get($resumeData, 'skills.hard_skills', []),
+            data_get($resumeData, 'skills.tools_technologies', []),
+            data_get($resumeData, 'skills.soft_skills', [])
+        )));
+
+        if ($domain) {
+            $user->domain = $domain;
+        }
+
+        if (!empty($skills)) {
+            $user->skills = array_values($skills);
+        }
+
+        $user->save();
     }
 }

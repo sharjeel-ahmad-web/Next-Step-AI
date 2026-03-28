@@ -80,4 +80,27 @@ class ProfileController extends Controller
             'user' => $user
         ]);
     }
+
+    /**
+     * POST /api/user/location
+     */
+    public function saveLocation(Request $request)
+    {
+        $data = $request->validate([
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+        ]);
+
+        $user = $request->user();
+        $user->location = [
+            'lat' => (float) $data['lat'],
+            'lng' => (float) $data['lng'],
+        ];
+        $user->save();
+
+        return response()->json([
+            'message' => 'Location saved',
+            'location' => $user->location,
+        ]);
+    }
 }
