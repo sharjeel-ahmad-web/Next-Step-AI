@@ -1,191 +1,113 @@
 {
-    "info": {
-        "name": "NextStep AI API",
-        "_postman_id": "d1c5c9d4-0000-4c00-9000-000000000001",
-        "description": "Core endpoints + Smart Job Discovery",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  "info": {
+    "name": "NextStep AI Job Portal",
+    "_postman_id": "d1c5c9d4-0000-4c00-9000-000000000002",
+    "description": "Job discovery + posting + applications for NextStep AI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api" },
+    { "key": "token", "value": "PASTE_BEARER_TOKEN_HERE" },
+    { "key": "lat", "value": "24.8607" },
+    { "key": "lng", "value": "67.0011" },
+    { "key": "location_text", "value": "San Francisco, CA, USA" },
+    { "key": "job_id", "value": "PASTE_JOB_ID_HERE" }
+  ],
+  "item": [
+    { "name": "Health", "request": { "method": "GET", "url": "{{base_url}}/health" } },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}" },
+        "url": "{{base_url}}/auth/login"
+      }
     },
-    "variable": [
-        {
-            "key": "base_url",
-            "value": "http://localhost:8000/api"
-        },
-        {
-            "key": "token",
-            "value": "PASTE_BEARER_TOKEN_HERE"
-        },
-        {
-            "key": "lat",
-            "value": "24.8607"
-        },
-        {
-            "key": "lng",
-            "value": "67.0011"
+    {
+      "name": "Profile - Save Location",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"lat\": {{lat}},\n  \"lng\": {{lng}}\n}" },
+        "url": "{{base_url}}/profile/location"
+      }
+    },
+    {
+      "name": "Jobs - Fetch (providers)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "body": { "mode": "raw", "raw": "{\n  \"location_text\": \"{{location_text}}\"\n}" },
+        "url": "{{base_url}}/jobs/fetch"
+      }
+    },
+    {
+      "name": "Jobs - List (filters)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "{{base_url}}/jobs?q=react&source=linkedin&min_match=60&max_age_days=7&location_text={{location_text}}",
+          "host": ["{{base_url}}/jobs"],
+          "query": [
+            { "key": "q", "value": "react" },
+            { "key": "source", "value": "linkedin" },
+            { "key": "min_match", "value": "60" },
+            { "key": "max_age_days", "value": "7" },
+            { "key": "location_text", "value": "{{location_text}}" }
+          ]
         }
-    ],
-    "item": [
-        {
-            "name": "Health",
-            "request": {
-                "method": "GET",
-                "url": "{{base_url}}/health"
-            }
+      }
+    },
+    {
+      "name": "Jobs - Nearby (map)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{base_url}}/jobs/nearby"
+      }
+    },
+    {
+      "name": "Jobs - Post Manual",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Junior React Developer\",\n  \"company\": \"Acme Labs\",\n  \"description\": \"Build UI with React + Tailwind.\",\n  \"location_text\": \"{{location_text}}\",\n  \"job_url\": \"https://jobs.example.com/123\",\n  \"domain\": \"Frontend\"\n}"
         },
-        {
-            "name": "Auth - Register",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
-                },
-                "url": "{{base_url}}/auth/register"
-            }
+        "url": "{{base_url}}/jobs"
+      }
+    },
+    {
+      "name": "Jobs - Apply",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cover_note\": \"I have 1 year React experience.\",\n  \"resume_url\": \"https://example.com/myresume.pdf\"\n}"
         },
-        {
-            "name": "Auth - Login",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
-                },
-                "url": "{{base_url}}/auth/login"
-            }
-        },
-        {
-            "name": "Auth - Me",
-            "request": {
-                "method": "GET",
-                "header": [
-                    {
-                        "key": "Authorization",
-                        "value": "Bearer {{token}}"
-                    }
-                ],
-                "url": "{{base_url}}/auth/me"
-            }
-        },
-        {
-            "name": "Profile - Save Location",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Authorization",
-                        "value": "Bearer {{token}}"
-                    },
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n  \"lat\": {{lat}},\n  \"lng\": {{lng}}\n}"
-                },
-                "url": "{{base_url}}/profile/location"
-            }
-        },
-        {
-            "name": "Jobs - Fetch (trigger providers)",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Authorization",
-                        "value": "Bearer {{token}}"
-                    }
-                ],
-                "url": "{{base_url}}/jobs/fetch"
-            }
-        },
-        {
-            "name": "Jobs - List (mine)",
-            "request": {
-                "method": "GET",
-                "header": [
-                    {
-                        "key": "Authorization",
-                        "value": "Bearer {{token}}"
-                    }
-                ],
-                "url": "{{base_url}}/jobs"
-            }
-        },
-        {
-            "name": "Jobs - Nearby (map)",
-            "request": {
-                "method": "GET",
-                "header": [
-                    {
-                        "key": "Authorization",
-                        "value": "Bearer {{token}}"
-                    }
-                ],
-                "url": "{{base_url}}/jobs/nearby"
-            }
-        },
-        {
-            "name": "Resume - Generate",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Authorization",
-                        "value": "Bearer {{token}}"
-                    },
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n  \"prompt\": \"Create a frontend developer resume\",\n  \"target_role\": \"Frontend Developer\",\n  \"industry\": \"Software\",\n  \"experience_level\": \"Junior\"\n}"
-                },
-                "url": "{{base_url}}/resumes/generate"
-            }
-        },
-        {
-            "name": "Skill Gap - Analyze",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Authorization",
-                        "value": "Bearer {{token}}"
-                    }
-                ],
-                "body": {
-                    "mode": "formdata",
-                    "formdata": [
-                        {
-                            "key": "target_role",
-                            "value": "Frontend Developer",
-                            "type": "text"
-                        },
-                        {
-                            "key": "job_description",
-                            "value": "Building React UI and consuming REST APIs",
-                            "type": "text"
-                        }
-                    ]
-                },
-                "url": "{{base_url}}/skill-gap/analyze"
-            }
-        }
-    ]
+        "url": "{{base_url}}/jobs/{{job_id}}/apply"
+      }
+    },
+    {
+      "name": "Job Applications - Mine",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{base_url}}/job-applications"
+      }
+    }
+  ]
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'react-hot-toast'
-import { MapPin, RefreshCcw, Compass, Satellite, Sparkles, Clock3, Target, BadgeCheck, Filter, PlusCircle } from 'lucide-react'
+import { MapPin, RefreshCcw, Compass, Satellite, Sparkles, Clock3, Target, BadgeCheck, Filter, PlusCircle, Send } from 'lucide-react'
 import { jobsAPI, profileAPI } from '../services/api'
 import useAuthStore from '../store/authStore'
 
@@ -118,23 +118,71 @@ const JobCard = ({ job, distance }) => (
       )}
     </div>
 
-    <div className="mt-4 flex items-center justify-between">
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
       <a
         href={job.job_url || '#'}
         target="_blank"
         rel="noreferrer"
         className="text-sm font-bold text-[var(--brand-sky-dark)] transition hover:underline"
       >
-        View & Apply →
+        View details →
       </a>
-      <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
-        <Clock3 size={14} />
-        <span>Saved to your feed</span>
-      </div>
+      <JobApplyButton jobId={job._id} />
     </div>
   </motion.div>
 )
 
+const JobApplyButton = ({ jobId }) => {
+  const [open, setOpen] = useState(false)
+  const [form, setForm] = useState({ cover_note: '', resume_url: '' })
+  const [loading, setLoading] = useState(false)
+
+  const submit = async () => {
+    try {
+      setLoading(true)
+      await jobsAPI.apply(jobId, form)
+      toast.success('Application submitted')
+      setOpen(false)
+      setForm({ cover_note: '', resume_url: '' })
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Apply failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button type="button" className="btn-secondary" onClick={() => setOpen((v) => !v)}>
+        <Send className="h-4 w-4" />
+        Apply
+      </button>
+      {open && (
+        <div className="w-full max-w-md rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-3 shadow-[var(--shadow-soft)]">
+          <textarea
+            className="input"
+            rows="3"
+            placeholder="Cover note (optional)"
+            value={form.cover_note}
+            onChange={(e) => setForm({ ...form, cover_note: e.target.value })}
+          />
+          <input
+            className="input mt-2"
+            placeholder="Resume URL (optional)"
+            value={form.resume_url}
+            onChange={(e) => setForm({ ...form, resume_url: e.target.value })}
+          />
+          <div className="mt-2 flex justify-end gap-2">
+            <button className="btn-secondary" onClick={() => setOpen(false)}>Cancel</button>
+            <button className="btn-primary" onClick={submit} disabled={loading}>
+              {loading ? 'Submitting…' : 'Submit'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 const JobsPage = () => {
   const { user, setUser } = useAuthStore()
   const [jobs, setJobs] = useState([])
@@ -229,7 +277,7 @@ const JobsPage = () => {
           toast.error('Location error. Try again.')
         }
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
     )
   }
 

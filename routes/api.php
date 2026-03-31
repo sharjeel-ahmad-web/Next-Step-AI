@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\JobApplicationController;
 
 // ============================================================
 // PUBLIC Routes (no authentication required)
@@ -121,7 +122,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/nearby', [JobController::class, 'nearby']);
         Route::post('/fetch', [JobController::class, 'fetch']);
         Route::post('/', [JobController::class, 'store']);
+        Route::post('/{id}/apply', [JobApplicationController::class, 'apply']);
     });
+
+    Route::get('/job-applications', [JobApplicationController::class, 'myApplications']);
 
     // Admin
     Route::prefix('admin')->group(function () {
