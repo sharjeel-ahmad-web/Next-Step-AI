@@ -149,17 +149,4 @@ export const resumeAPI = {
   }),
 }
 
-// ============ JOB DISCOVERY APIs ============
-export const jobsAPI = {
-  fetchLatest: (payload = {}) => api.post('/jobs/fetch', payload),
-  list: (params = {}) => api.get('/jobs', { params }),
-  nearby: () => api.get('/jobs/nearby'),
-  create: (payload) => api.post('/jobs', payload),
-  apply: (id, payload) => api.post(`/jobs/${id}/apply`, payload),
-}
-
-export const jobApplicationsAPI = {
-  mine: () => api.get('/job-applications'),
-}
-
 export default api

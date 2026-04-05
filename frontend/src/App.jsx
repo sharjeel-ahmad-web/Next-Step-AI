@@ -24,7 +24,6 @@ import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import ResumeBuilderPage from './pages/ResumeBuilderPage'
 import PortfolioShowcasePage from './pages/PortfolioShowcasePage'
-import JobsPage from './pages/JobsPage'
 
 function App() {
   return (
@@ -63,7 +62,6 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/resume-builder" element={<ResumeBuilderPage />} />
             <Route path="/portfolio-showcase" element={<PortfolioShowcasePage />} />
-            <Route path="/jobs" element={<JobsPage />} />
           </Route>
 
           {/* Admin Routes */}

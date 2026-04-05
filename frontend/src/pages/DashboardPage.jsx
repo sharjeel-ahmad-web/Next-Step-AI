@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Target, Map, TrendingUp, Award, Zap, Calendar, ArrowRight, FileText, Briefcase, Compass } from 'lucide-react'
+import { Target, Map, Award, Zap, Calendar, ArrowRight, FileText, Sparkles, Compass } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '../store/authStore'
-import { gamificationAPI, roadmapAPI, jobsAPI } from '../services/api'
-import { EmptyState, LoadingScreen, PageContainer, PageIntro, SectionCard, StatCard } from '../components/AppShell'
+import { gamificationAPI, roadmapAPI } from '../services/api'
+import { EmptyState, LoadingScreen, PageContainer, SectionCard, StatCard } from '../components/AppShell'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
-import LanguageSwitcher from '../components/LanguageSwitcher'
 import { useLearningLanguage } from '../components/LanguageProvider'
 
 const DashboardPage = () => {
@@ -22,20 +21,17 @@ const DashboardPage = () => {
   const { user } = useAuthStore()
   const [stats, setStats] = useState(null)
   const [roadmaps, setRoadmaps] = useState([])
-  const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsResponse, roadmapsResponse, jobsResponse] = await Promise.all([
+        const [statsResponse, roadmapsResponse] = await Promise.all([
           gamificationAPI.getStats(),
           roadmapAPI.getAll(),
-          jobsAPI.list().catch(() => ({ data: [] })),
         ])
         setStats(statsResponse.data)
         setRoadmaps(roadmapsResponse.data)
-        setJobs(jobsResponse.data || [])
       } catch (error) {
         toast.error('Failed to load dashboard data')
       } finally {
@@ -45,16 +41,6 @@ const DashboardPage = () => {
 
     fetchData()
   }, [])
-
-  const quickActions = useMemo(
-    () => [
-      { icon: Target, title: 'Analyze skills', desc: 'Upload a resume and find gaps.', link: '/analyze', tone: 'orange' },
-      { icon: Map, title: 'Open roadmap', desc: 'Jump back into your path.', link: '/roadmaps', tone: 'blue' },
-      { icon: Briefcase, title: 'Find jobs', desc: 'Fetch roles near you.', link: '/jobs', tone: 'green' },
-      { icon: Award, title: 'Download certificate', desc: 'Export and share proof.', link: '/certificates', tone: 'green' },
-    ],
-    [],
-  )
 
   const primaryNextAction = useMemo(() => {
     if (roadmaps.length > 0) {
@@ -69,146 +55,103 @@ const DashboardPage = () => {
 
   return (
     <PageContainer>
-      <PageIntro
-        eyebrow="Learner dashboard"
-        title={`Welcome back, ${user?.name || 'Learner'}`}
-        description={`Review your roadmap activity, current streak, and the fastest next actions. Your preparation language is set to ${language.label}.`}
-        actions={<LanguageSwitcher />}
-      />
+      <SectionCard className="mb-8 overflow-hidden bg-gradient-to-r from-[var(--brand-charcoal)] via-[var(--brand-sky)] to-[var(--surface)] text-white">
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-xl">
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.26em] text-white/70">
+              <Sparkles size={16} /> Learner dashboard
+            </p>
+            <h1 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+              {`Welcome back, ${user?.name || 'Learner'}`}
+            </h1>
+            <p className="mt-3 text-sm leading-7 text-white/80">
+              Your prep language: {language.label}. Stay focused with a single next step and track steady progress.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link to={primaryNextAction.link} className="btn-primary">
+                {primaryNextAction.label}
+              </Link>
+              <Link to="/roadmaps" className="btn-secondary text-white border-white/40 hover:border-white">
+                View all roadmaps
+              </Link>
+            </div>
+          </div>
+          <div className="flex w-full max-w-sm flex-col gap-3 rounded-3xl bg-white/10 p-4 backdrop-blur md:w-auto">
+            <div className="flex items-center justify-between text-sm text-white/80">
+              <span>XP</span>
+              <span className="text-lg font-bold">{stats?.xp || 0}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm text-white/80">
+              <span>Active roadmaps</span>
+              <span className="text-lg font-bold">{roadmaps.length}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm text-white/80">
+              <span>Day streak</span>
+              <span className="text-lg font-bold">{stats?.streak || 0}</span>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
 
-      <div className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mb-8 grid gap-5 md:grid-cols-3">
         <StatCard icon={Zap} label="XP" value={stats?.xp || 0} tone="orange" detail="Total earned" />
         <StatCard icon={Map} label="Active roadmaps" value={roadmaps.length} tone="green" detail="Keep momentum" />
         <StatCard icon={Calendar} label="Day streak" value={stats?.streak || 0} tone="lilac" detail="Consistency" />
       </div>
 
-      <SectionCard className="mb-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Next action</p>
-            <h2 className="mt-2 text-2xl font-bold">Stay on track</h2>
-            <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">One clear step to move forward.</p>
-          </div>
-          <Link to={primaryNextAction.link} className="btn-primary">
-            {primaryNextAction.label}
-          </Link>
-        </div>
-      </SectionCard>
-
-      <div className="mb-8 grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
+      <div className="mb-8 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <SectionCard>
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Quick actions</p>
-              <h2 className="mt-2 text-2xl font-bold">What do you want to do next?</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Focus</p>
+              <h2 className="mt-1 text-2xl font-bold">Pick a single next move</h2>
             </div>
           </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {quickActions.map((action, index) => (
-              <motion.div key={action.title} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }}>
-                <Link to={action.link} className="block rounded-[1.6rem] border border-[var(--border-soft)] bg-[var(--surface)] p-5 transition hover:-translate-y-1 hover:border-[var(--border-strong)]">
-                  <div className={`mb-4 inline-flex rounded-2xl p-3 ${
-                    action.tone === 'orange'
-                      ? 'bg-[var(--brand-orange)]/12 text-[var(--brand-orange)]'
-                      : action.tone === 'lilac'
-                        ? 'bg-[var(--brand-lilac)]/15 text-[var(--brand-lilac)]'
-                        : action.tone === 'green'
-                          ? 'bg-[var(--brand-green)]/15 text-[var(--brand-green)]'
-                          : 'bg-[var(--brand-blue)]/12 text-[var(--brand-blue)]'
-                  }`}>
-                    <action.icon size={22} />
-                  </div>
-                  <h3 className="text-lg font-bold">{action.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{action.desc}</p>
-                </Link>
-              </motion.div>
+          <div className="flex flex-wrap gap-3">
+            {[
+              { icon: Target, label: 'Analyze skills', link: '/analyze' },
+              { icon: Map, label: 'Open roadmap', link: '/roadmaps' },
+              { icon: FileText, label: 'Resume builder', link: '/resume-builder' },
+              { icon: Award, label: 'Certificates', link: '/certificates' },
+            ].map((item, idx) => (
+              <Link
+                key={item.label}
+                to={item.link}
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--border-soft)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:-translate-y-0.5 hover:border-[var(--border-strong)]"
+              >
+                <item.icon size={16} />
+                {item.label}
+              </Link>
             ))}
           </div>
         </SectionCard>
 
         <SectionCard>
-          <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Quick actions</p>
-          <h2 className="mt-2 text-2xl font-bold">Pick one and go</h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {quickActions.map((action, index) => (
-              <motion.div key={action.title} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }}>
-                <Link to={action.link} className="block rounded-[1.6rem] border border-[var(--border-soft)] bg-[var(--surface)] p-5 transition hover:-translate-y-1 hover:border-[var(--border-strong)]">
-                  <div
-                    className={`mb-4 inline-flex rounded-2xl p-3 ${
-                      action.tone === 'orange'
-                        ? 'bg-[var(--brand-orange)]/12 text-[var(--brand-orange)]'
-                        : action.tone === 'green'
-                          ? 'bg-[var(--brand-green)]/15 text-[var(--brand-green)]'
-                          : 'bg-[var(--brand-blue)]/12 text-[var(--brand-blue)]'
-                    }`}
-                  >
-                    <action.icon size={22} />
-                  </div>
-                  <h3 className="text-lg font-bold">{action.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{action.desc}</p>
-                </Link>
-              </motion.div>
-            ))}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Rhythm</p>
+              <h2 className="mt-1 text-xl font-bold">Progress pulse</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Stay steady; consistency beats intensity.</p>
+            </div>
+          </div>
+          <div className="mt-5 space-y-3">
+            <div className="flex items-center justify-between text-sm text-[var(--text-secondary)]">
+              <span>Weekly streak</span>
+              <span className="font-bold text-[var(--text-primary)]">{stats?.streak || 0} days</span>
+            </div>
+            <div className="h-2 rounded-full bg-[var(--surface-strong)]">
+              <div
+                className="h-2 rounded-full bg-[var(--brand-blue)] transition-all"
+                style={{ width: `${Math.min(100, (stats?.streak || 0) * 4)}%` }}
+              />
+            </div>
+            <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+              <Compass size={16} />
+              <span>Tip: Block 25 minutes today for one roadmap node.</span>
+            </div>
           </div>
         </SectionCard>
       </div>
-
-      <SectionCard className="mb-8">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Job matches</p>
-            <h2 className="mt-2 text-2xl font-bold">Fresh roles for you</h2>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">AI-scored against your resume. Fetch more anytime.</p>
-          </div>
-          <Link to="/jobs" className="btn-secondary">
-            Open Jobs
-          </Link>
-        </div>
-
-        {jobs.length === 0 ? (
-          <EmptyState
-            icon={Briefcase}
-            title="No jobs yet"
-            description="Tap the fetch button on Jobs page to pull fresh roles."
-            action={
-              <Link to="/jobs" className="btn-primary">
-                Go to Jobs
-              </Link>
-            }
-          />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-3">
-            {jobs.slice(0, 3).map((job, idx) => (
-              <div
-                key={job._id || idx}
-                className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-4 transition hover:-translate-y-1"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{job.domain || 'Role match'}</p>
-                    <h3 className="mt-1 text-lg font-bold">{job.title}</h3>
-                    <p className="text-sm text-[var(--text-secondary)]">{job.company}</p>
-                  </div>
-                  {job.match_score !== undefined && (
-                    <span className="rounded-full bg-[var(--brand-green)]/15 px-3 py-1 text-xs font-bold text-[var(--brand-green)]">
-                      {job.match_score}% match
-                    </span>
-                  )}
-                </div>
-                <div className="mt-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-                  <Compass size={14} />
-                  <span>{job.location?.city || job.location?.address || 'Location pending'}</span>
-                </div>
-                <Link to="/jobs" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand-blue)]">
-                  View details
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
 
       <SectionCard>
         <div className="mb-5 flex items-center justify-between gap-3">
