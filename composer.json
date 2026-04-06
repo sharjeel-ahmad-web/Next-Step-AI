@@ -30,16 +30,25 @@
     },
     "scripts": {
         "vercel": [
-            "composer install --no-dev --optimize-autoloader",
-            "php artisan config:cache",
-            "php artisan route:cache"
+            "php -r \"echo 'vercel script skipped';\""
         ]
     },
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "ext-mongodb": "1.21.0",
+            "ext-gd": "8.3.0"
+        }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "extra": {
+        "laravel": {
+            "dont-discover": [
+                "laravel/sail"
+            ]
+        }
+    }
 }
