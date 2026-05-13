@@ -115,8 +115,26 @@ class GeminiService
         
         Log::info('Gemini API Raw Response Text', ['text_snippet' => substr($text, 0, 200) . '...']);
 
-        // Clean up markdown markers more aggressively
-        $cleanText = preg_replace('/^```(?:json)?\s*|```$/m', '', trim($text));
+        // Robust JSON extraction
+        $cleanText = trim($text);
+        
+        $startObj = strpos($cleanText, '{');
+        $startArr = strpos($cleanText, '[');
+        
+        if ($startObj === false && $startArr === false) {
+            Log::error('Gemini API returned no JSON format', ['text' => $text]);
+            return $cleanText;
+        }
+        
+        $start = ($startObj !== false && $startArr !== false) ? min($startObj, $startArr) : ($startObj !== false ? $startObj : $startArr);
+        
+        $endObj = strrpos($cleanText, '}');
+        $endArr = strrpos($cleanText, ']');
+        $end = ($endObj !== false && $endArr !== false) ? max($endObj, $endArr) : ($endObj !== false ? $endObj : $endArr);
+        
+        if ($end !== false && $end > $start) {
+            $cleanText = substr($cleanText, $start, $end - $start + 1);
+        }
         
         return $cleanText;
     }

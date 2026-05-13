@@ -11,6 +11,7 @@ use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\QuizController;
 
 // ============================================================
 // PUBLIC Routes (no authentication required)
@@ -126,6 +127,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ============ QUIZ ROUTES ============
-    Route::get('/quiz', [App\Http\Controllers\QuizController::class, 'getQuiz']);
-    Route::post('/quiz/submit', [App\Http\Controllers\QuizController::class, 'submitQuiz']);
+    Route::get('/quiz', [QuizController::class, 'getQuiz']);
+    Route::post('/quiz/submit', [QuizController::class, 'submitQuiz']);
 });

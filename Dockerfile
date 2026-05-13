@@ -1,11 +1,10 @@
-# Backend (Laravel) Dockerfile
-FROM php:8.2-fpm
+# Backend (Laravel) — pinned Debian for reproducible apt installs
+FROM php:8.2-fpm-bookworm
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# System deps + cleanup in one layer (correct apt lists path)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -19,41 +18,34 @@ RUN apt-get update && apt-get install -y \
     sqlite3 \
     libsqlite3-dev \
     libmagickwand-dev \
-    && rm -rf /var/lib/apt/lists*
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_sqlite pdo_mysql mbstring exif pcntl bcmath gd zip
+# PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" pdo_sqlite pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Install ImageMagick and Imagick extension for PDF/image generation
-RUN apt-get update && apt-get install -y libssl-dev && rm -rf /var/lib/apt/lists/* && \
-    pecl install imagick && \
-    docker-php-ext-enable imagick && \
-    pecl install mongodb && \
-    docker-php-ext-enable mongodb || true
+# PECL: MongoDB required; Imagick can fail on some hosts — do not block image build
+RUN pecl install mongodb && docker-php-ext-enable mongodb \
+    && (pecl install imagick && docker-php-ext-enable imagick || true)
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy application files
-COPY composer.json /app/
+COPY composer.json composer.lock* /app/
 
-# Install PHP dependencies (ignore MongoDB extension requirement if not available)
-RUN composer install --no-interaction --optimize-autoloader --ignore-platform-req=ext-mongodb
+RUN composer install --no-dev --no-interaction --optimize-autoloader --ignore-platform-req=ext-mongodb
 
-# Copy the rest of application
 COPY . /app/
 
-# Create necessary directories and set permissions
-RUN mkdir -p /app/storage/logs \
-    && chmod -R 755 /app/storage \
-    && chmod -R 755 /app/bootstrap/cache \
-    && chown -R www-data:www-data /app
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && mkdir -p /app/storage/logs /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache \
+    && chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
-# Generate app key if not exists
-RUN php artisan key:generate --force || true
+RUN php artisan key:generate --force --no-interaction 2>/dev/null || true
 
-# Expose port (for reference, actual port is configured in docker-compose)
 EXPOSE 8000
 
-# Run Laravel application
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
